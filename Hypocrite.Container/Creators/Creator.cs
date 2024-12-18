@@ -14,6 +14,16 @@ namespace Hypocrite.Container.Creators
             return instance;
         }
 
+        internal static void InjectPropsAndFields<T>(T instance, ILightContainer container)
+        {
+            PropsAndFieldsInjector.Inject(instance, );
+        }
+
+        internal static void InjectMethods(ILightContainer container)
+        {
+
+        }
+
         private static readonly Dictionary<Type, (ConstructorInfo, ParameterInfo[])> _cachedCtors = new Dictionary<Type, (ConstructorInfo, ParameterInfo[])>();
         private static ConstructorInfo GetCtor<T>(out ParameterInfo[] pars)
         {
