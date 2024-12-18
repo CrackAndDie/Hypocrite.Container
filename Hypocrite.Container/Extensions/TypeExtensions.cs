@@ -51,5 +51,10 @@ namespace Hypocrite.Container.Extensions
 				return primitiveNameMapping.TryGetValue(type, out name) ? name : type.Name;
 			}
 		}
+
+		internal static object GetDefaultValue(this Type type)
+		{
+            return type.IsValueType ? Activator.CreateInstance(type) : null;
+        }
 	}
 }

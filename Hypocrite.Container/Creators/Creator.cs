@@ -1,4 +1,5 @@
-﻿using Hypocrite.Container.Interfaces;
+﻿using Hypocrite.Container.Extensions;
+using Hypocrite.Container.Interfaces;
 using System.Reflection;
 
 namespace Hypocrite.Container.Creators
@@ -49,7 +50,34 @@ namespace Hypocrite.Container.Creators
 
         private static object[] GetArguments(ILightContainer container, ParameterInfo[] pars)
         {
-            return new object[0];
+            object[] args = new object[pars.Length];
+            for (int i = 0; i < pars.Length; ++i)
+            {
+                var par = pars[i];
+                var arg = GetArgument(container, par.ParameterType);
+
+                // if there was no the Type in container and param has default value - apply it
+                if (arg == null && par.HasDefaultValue)
+                    arg = par.DefaultValue;
+                // if tehre was no the Type in container - use default
+                else if (arg == null)
+                    arg = par.ParameterType.GetDefaultValue();
+                args[i] = arg;
+            }
+            return args;
+        }
+
+        private static object GetArgument(ILightContainer container, Type type)
+        {
+            try
+            {
+                return container.Resolve(type);
+            }
+            catch (KeyNotFoundException)
+            {
+                // if the entry not found
+                return null;
+            }
         }
     }
 }
