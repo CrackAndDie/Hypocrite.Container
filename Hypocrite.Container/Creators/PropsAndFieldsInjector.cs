@@ -11,9 +11,9 @@ namespace Hypocrite.Container.Creators
         {
             Action<object, Dictionary<string, object>> injector;
             // check for cache
-            if (_cachedWithParams.TryGetValue(typeof(T), out var cachedCreator))
+            if (_cachedWithParams.TryGetValue(typeof(T), out var cachedInjector))
             {
-                injector = cachedCreator;
+                injector = cachedInjector;
             }
             else
             {
