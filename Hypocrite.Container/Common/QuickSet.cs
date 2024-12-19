@@ -1,4 +1,6 @@
-﻿namespace Hypocrite.Container.Common
+﻿using System;
+
+namespace Hypocrite.Container.Common
 {
 	public class QuickSet<TValue>
 	{

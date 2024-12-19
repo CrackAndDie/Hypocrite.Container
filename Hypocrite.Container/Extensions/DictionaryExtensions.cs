@@ -1,4 +1,6 @@
-﻿namespace Hypocrite.Container.Extensions
+﻿using System.Collections.Generic;
+
+namespace Hypocrite.Container.Extensions
 {
     internal static class DictionaryExtensions
     {

@@ -1,6 +1,9 @@
 ﻿using System.Linq.Expressions;
 using System.Reflection.Emit;
 using System.Reflection;
+using System.Collections.Generic;
+using System;
+using System.Linq;
 
 namespace Hypocrite.Container.Creators
 {

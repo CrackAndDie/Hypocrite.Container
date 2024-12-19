@@ -1,4 +1,6 @@
-﻿namespace Hypocrite.Container
+﻿using System;
+
+namespace Hypocrite.Container
 {
 	/// <summary>
 	/// This attribute is used to mark properties and parameters as targets for injection.

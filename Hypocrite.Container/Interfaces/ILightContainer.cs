@@ -1,4 +1,6 @@
-﻿namespace Hypocrite.Container.Interfaces
+﻿using System;
+
+namespace Hypocrite.Container.Interfaces
 {
 	public interface ILightContainer
 	{

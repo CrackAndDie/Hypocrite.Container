@@ -1,4 +1,7 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace Hypocrite.Container.Extensions
 {
@@ -8,7 +11,7 @@ namespace Hypocrite.Container.Extensions
     /// </summary>
     internal static class TypeExtensions
 	{
-		private static readonly Dictionary<Type, string> primitiveNameMapping = new()
+		private static readonly Dictionary<Type, string> primitiveNameMapping = new Dictionary<Type, string>()
 		{
 			{ typeof(byte), "byte" },
 			{ typeof(sbyte), "sbyte" },

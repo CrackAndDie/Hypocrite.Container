@@ -3,6 +3,8 @@ using Hypocrite.Container.Creators;
 using Hypocrite.Container.Extensions;
 using Hypocrite.Container.Interfaces;
 using Hypocrite.Container.Registrations;
+using System;
+using System.Collections.Generic;
 
 namespace Hypocrite.Container
 {

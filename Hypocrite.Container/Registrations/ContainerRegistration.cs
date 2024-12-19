@@ -1,4 +1,5 @@
 ﻿using Hypocrite.Container.Interfaces;
+using System;
 
 namespace Hypocrite.Container.Registrations
 {
