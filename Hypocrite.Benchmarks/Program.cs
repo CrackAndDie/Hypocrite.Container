@@ -1,5 +1,7 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
+using Hypocrite.Benchmarks.Tests;
+using Hypocrite.Container;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -21,6 +23,12 @@ namespace Hypocrite.Benchmarks
                 .ToArray();
             var benchmarkSwitcher = new BenchmarkSwitcher(benchmarks);
             benchmarkSwitcher.Run(args);
+
+            //var _lightContainer = new LightContainer();
+            //_lightContainer.Register<Test_PureResolveType, Test_PureResolveType>();
+
+            //_lightContainer.Resolve<Test_PureResolveType>();
+            //_lightContainer.Resolve<Test_PureResolveType>();
 
             Console.ReadKey();
         }
