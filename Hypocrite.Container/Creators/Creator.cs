@@ -132,9 +132,11 @@ namespace Hypocrite.Container.Creators
 
                 var methodPars = methodInfo.GetParameters();
                 InjectionElement[] pars = new InjectionElement[methodPars.Length];
-                for (int i = 0; i < methodPars.Length; ++i)
+                int i = 0;
+                foreach (var par in methodPars)
                 {
-                    pars[i] = InjectionElement.FromParameterInfo(methodPars[i]);
+                    pars[i] = InjectionElement.FromParameterInfo(par);
+                    ++i;
                 }
                 elements.Add(methodInfo.Name, pars);
             }
@@ -149,9 +151,9 @@ namespace Hypocrite.Container.Creators
                 return Array.Empty<object>();
 
             object[] args = new object[pars.Length];
-            for (int i = 0; i < pars.Length; ++i)
+            int i = 0;
+            foreach (var par in pars)
             {
-                var par = pars[i];
                 var arg = GetArgument(container, par.ElementType);
 
                 // if there was no the Type in container and param has default value - apply it
@@ -161,6 +163,7 @@ namespace Hypocrite.Container.Creators
                 else if (arg == null)
                     arg = par.ElementType.GetDefaultValue();
                 args[i] = arg;
+                ++i;
             }
             return args;
         }
