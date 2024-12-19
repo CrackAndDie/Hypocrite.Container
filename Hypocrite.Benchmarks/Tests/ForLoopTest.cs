@@ -12,7 +12,7 @@ namespace Hypocrite.Benchmarks.Tests
 
         public ForLoopTest()
         {
-            _testArr = Enumerable.Range(0, 100000).ToArray();
+            _testArr = Enumerable.Range(0, 10).ToArray();
         }
 
         [Benchmark]
