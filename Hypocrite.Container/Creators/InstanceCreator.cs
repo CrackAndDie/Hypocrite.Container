@@ -7,20 +7,20 @@ namespace Hypocrite.Container.Creators
     internal static class InstanceCreator
     {
         private static readonly Dictionary<Type, Func<object[], object>> _cachedWithParams = new Dictionary<Type, Func<object[], object>>();
-        internal static T CreateWithParams<T>(ConstructorInfo ctor, object[] args)
+        internal static object CreateWithParams(Type type, ConstructorInfo ctor, object[] args)
         {
             Func<object[], object> creator;
             // check for cache
-            if (_cachedWithParams.TryGetValue(typeof(T), out var cachedCreator))
+            if (_cachedWithParams.TryGetValue(type, out var cachedCreator))
             {
                 creator = cachedCreator;
             }
             else
             {
                 creator = GenerateFactoryWithParams(ctor);
-                _cachedWithParams.Add(typeof(T), creator);
+                _cachedWithParams.Add(type, creator);
             }
-            return (T)creator.Invoke(args);
+            return creator.Invoke(args);
         }
 
         private static Func<object[], object> GenerateFactoryWithParams(ConstructorInfo ctor)

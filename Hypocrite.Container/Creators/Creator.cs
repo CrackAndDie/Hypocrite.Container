@@ -6,17 +6,17 @@ namespace Hypocrite.Container.Creators
 {
     internal static class Creator
     {
-        internal static T Create<T>(ILightContainer container)
+        internal static object Create(Type type, ILightContainer container)
         {
-            ConstructorInfo ctor = GetCtor<T>(out InjectionElement[] pars);
+            ConstructorInfo ctor = GetCtor(type, out InjectionElement[] pars);
             object[] args = GetArguments(container, pars);
-            T instance = InstanceCreator.CreateWithParams<T>(ctor, args);
+            object instance = InstanceCreator.CreateWithParams(type, ctor, args);
             return instance;
         }
 
-        internal static void InjectPropsAndFields<T>(T instance, ILightContainer container)
+        internal static void InjectPropsAndFields(Type type, object instance, ILightContainer container)
         {
-            GetPropsAndFields<T>(out InjectionElement[] propsAndFields);
+            GetPropsAndFields(type, out InjectionElement[] propsAndFields);
             object[] args = GetArguments(container, propsAndFields);
 
             // gen data
@@ -24,36 +24,36 @@ namespace Hypocrite.Container.Creators
             for (int i = 0; i < propsAndFields.Length; ++i)
                 data.Add(propsAndFields[i].Name, args[i]);
 
-            PropsAndFieldsInjector.Inject(instance, data);
+            PropsAndFieldsInjector.Inject(type, instance, data);
         }
 
-        internal static void InjectMethods<T>(T instance, ILightContainer container)
+        internal static void InjectMethods(Type type, object instance, ILightContainer container)
         {
-            GetMethods<T>(out Dictionary<string, InjectionElement[]> methods);
+            GetMethods(type, out Dictionary<string, InjectionElement[]> methods);
 
             // gen data
             Dictionary<string, object[]> data = new Dictionary<string, object[]>(methods.Count);
             foreach (var mtd in methods)
                 data.Add(mtd.Key, GetArguments(container, mtd.Value));
 
-            MethodsInjector.Inject(instance, data);
+            MethodsInjector.Inject(type, instance, data);
         }
 
         private static readonly Dictionary<Type, (ConstructorInfo, InjectionElement[])> _cachedCtors = new Dictionary<Type, (ConstructorInfo, InjectionElement[])>();
-        private static ConstructorInfo GetCtor<T>(out InjectionElement[] pars)
+        private static ConstructorInfo GetCtor(Type type, out InjectionElement[] pars)
         {
             // check for cache
-            if (_cachedCtors.TryGetValue(typeof(T), out var cachedCtor))
+            if (_cachedCtors.TryGetValue(type, out var cachedCtor))
             {
                 pars = cachedCtor.Item2;
                 return cachedCtor.Item1;
             }
 
             ConstructorInfo ctor;
-            var ctorsWithAttribute = typeof(T).GetConstructors().Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null).ToList();
+            var ctorsWithAttribute = type.GetConstructors().Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null).ToList();
             if (ctorsWithAttribute.Count > 1)
             {
-                throw new AmbiguousMatchException($"Found more than one ctor with [InjectionAttribute] in {typeof(T).GetDescription()}");
+                throw new AmbiguousMatchException($"Found more than one ctor with [InjectionAttribute] in {type.GetDescription()}");
             }
             else if (ctorsWithAttribute.Count == 1)
             {
@@ -62,24 +62,24 @@ namespace Hypocrite.Container.Creators
             else
             {
                 // Search for parameterless ctor
-                ctor = typeof(T).GetConstructors()
+                ctor = type.GetConstructors()
                     .Where(c => c.GetParameters().Length == 0)
                     .FirstOrDefault();
 
                 if (ctor == null)
-                    throw new EntryPointNotFoundException($"Ctor of {typeof(T).GetDescription()} that could be used for creation could not be found");
+                    throw new EntryPointNotFoundException($"Ctor of {type.GetDescription()} that could be used for creation could not be found");
             }
             pars = ctor.GetParameters().Select(x => InjectionElement.FromParameterInfo(x)).ToArray();
             // caching
-            _cachedCtors.Add(typeof(T), (ctor, pars));
+            _cachedCtors.Add(type, (ctor, pars));
             return ctor;
         }
 
         private static readonly Dictionary<Type, InjectionElement[]> _cachedPropsAndFields = new Dictionary<Type, InjectionElement[]>();
-        private static void GetPropsAndFields<T>(out InjectionElement[] propsAndFields)
+        private static void GetPropsAndFields(Type type, out InjectionElement[] propsAndFields)
         {
             // check for cache
-            if (_cachedPropsAndFields.TryGetValue(typeof(T), out var cachedElements))
+            if (_cachedPropsAndFields.TryGetValue(type, out var cachedElements))
             {
                 propsAndFields = cachedElements;
                 return;
@@ -87,40 +87,40 @@ namespace Hypocrite.Container.Creators
 
             List<InjectionElement> elements = new List<InjectionElement>();
             // props shite
-            var propertyInfos = typeof(T).GetTypeInfo().DeclaredProperties.Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null);
+            var propertyInfos = type.GetTypeInfo().DeclaredProperties.Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null);
             foreach (var propertyInfo in propertyInfos)
             {
                 if (!propertyInfo.CanWrite)
-                    throw new MemberAccessException($"Property {typeof(T).GetDescription()}.{propertyInfo.Name} has to be writable");
+                    throw new MemberAccessException($"Property {type.GetDescription()}.{propertyInfo.Name} has to be writable");
                 elements.Add(InjectionElement.FromPropertyInfo(propertyInfo));
             }
             // fields shite
-            var fieldInfos = typeof(T).GetTypeInfo().DeclaredFields.Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null);
+            var fieldInfos = type.GetTypeInfo().DeclaredFields.Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null);
             foreach (var fieldInfo in fieldInfos)
             {
                 elements.Add(InjectionElement.FromFieldInfo(fieldInfo));
             }
             propsAndFields = elements.ToArray();
             // caching
-            _cachedPropsAndFields.Add(typeof(T), propsAndFields);
+            _cachedPropsAndFields.Add(type, propsAndFields);
         }
 
         private static readonly Dictionary<Type, Dictionary<string, InjectionElement[]>> _cachedMethods = new Dictionary<Type, Dictionary<string, InjectionElement[]>>();
-        private static void GetMethods<T>(out Dictionary<string, InjectionElement[]> methods)
+        private static void GetMethods(Type type, out Dictionary<string, InjectionElement[]> methods)
         {
             // check for cache
-            if (_cachedMethods.TryGetValue(typeof(T), out var cachedMethods))
+            if (_cachedMethods.TryGetValue(type, out var cachedMethods))
             {
                 methods = cachedMethods;
                 return;
             }
 
             Dictionary<string, InjectionElement[]> elements = new Dictionary<string, InjectionElement[]>();
-            var methodInfos = typeof(T).GetTypeInfo().DeclaredMethods.Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null);
+            var methodInfos = type.GetTypeInfo().DeclaredMethods.Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null);
             foreach (var methodInfo in methodInfos)
             {
                 if (methodInfo.IsStatic)
-                    throw new MemberAccessException($"Methods with [InjectionAttribute] could not be static: {typeof(T).GetDescription()}.{methodInfo.Name}");
+                    throw new MemberAccessException($"Methods with [InjectionAttribute] could not be static: {type.GetDescription()}.{methodInfo.Name}");
 
                 var methodPars = methodInfo.GetParameters();
                 InjectionElement[] pars = new InjectionElement[methodPars.Length];
@@ -132,7 +132,7 @@ namespace Hypocrite.Container.Creators
             }
             methods = elements;
             // caching
-            _cachedMethods.Add(typeof(T), methods);
+            _cachedMethods.Add(type, methods);
         }
 
         private static object[] GetArguments(ILightContainer container, InjectionElement[] pars)

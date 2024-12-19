@@ -7,33 +7,33 @@ namespace Hypocrite.Container.Creators
     internal static class PropsAndFieldsInjector
     {
         private static readonly Dictionary<Type, Action<object, Dictionary<string, object>>> _cachedWithParams = new Dictionary<Type, Action<object, Dictionary<string, object>>>();
-        internal static void Inject<T>(T instance, Dictionary<string, object> args)
+        internal static void Inject(Type type, object instance, Dictionary<string, object> args)
         {
             Action<object, Dictionary<string, object>> injector;
             // check for cache
-            if (_cachedWithParams.TryGetValue(typeof(T), out var cachedInjector))
+            if (_cachedWithParams.TryGetValue(type, out var cachedInjector))
             {
                 injector = cachedInjector;
             }
             else
             {
-                injector = GenerateFactoryWithParams<T>(args.Keys.ToArray());
-                _cachedWithParams.Add(typeof(T), injector);
+                injector = GenerateFactoryWithParams(type, args.Keys.ToArray());
+                _cachedWithParams.Add(type, injector);
             }
             injector.Invoke(instance, args);
         }
 
-        private static Action<object, Dictionary<string, object>> GenerateFactoryWithParams<T>(string[] keys)
+        private static Action<object, Dictionary<string, object>> GenerateFactoryWithParams(Type type, string[] keys)
         {
             // Params
             var instanceParam = Expression.Parameter(typeof(object), "instance");
             // Convert to required type
-            var typedInstance = Expression.Convert(instanceParam, typeof(T));
+            var typedInstance = Expression.Convert(instanceParam, type);
             var dictParam = Expression.Parameter(typeof(Dictionary<string, object>), "dict");
 
             var list = new List<Expression>();
             // props shite
-            var propertyInfos = typeof(T).GetTypeInfo().DeclaredProperties;
+            var propertyInfos = type.GetTypeInfo().DeclaredProperties;
             foreach (var propertyInfo in propertyInfos)
             {
                 if (!keys.Contains(propertyInfo.Name) || !propertyInfo.CanWrite)
@@ -55,7 +55,7 @@ namespace Hypocrite.Container.Creators
                 list.Add(assign);
             }
             // fields shite
-            var fieldInfos = typeof(T).GetTypeInfo().DeclaredFields;
+            var fieldInfos = type.GetTypeInfo().DeclaredFields;
             foreach (var fieldInfo in fieldInfos)
             {
                 if (!keys.Contains(fieldInfo.Name))
