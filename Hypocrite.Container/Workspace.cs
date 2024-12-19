@@ -57,5 +57,12 @@ namespace Hypocrite.Container
 
             return result;
         }
+
+        internal bool IsRegistered<T>(string name)
+        {
+            var type = typeof(T);
+            var entry = _registrations.Get(type.GetHashCode(), name);
+            return entry != null;
+        }
     }
 }
