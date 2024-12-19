@@ -4,24 +4,26 @@ using System.Reflection;
 using System.Collections.Generic;
 using System;
 using System.Linq;
+using Hypocrite.Container.Common;
 
 namespace Hypocrite.Container.Creators
 {
     internal static class InstanceCreator
     {
-        private static readonly Dictionary<Type, Func<object[], object>> _cachedWithParams = new Dictionary<Type, Func<object[], object>>();
-        internal static object CreateWithParams(Type type, ConstructorInfo ctor, object[] args)
+        private static readonly QuickSet<Func<object[], object>> _cachedWithParams = new QuickSet<Func<object[], object>>();
+        internal static object CreateWithParams(int hash, ConstructorInfo ctor, object[] args)
         {
             Func<object[], object> creator;
             // check for cache
-            if (_cachedWithParams.TryGetValue(type, out var cachedCreator))
+            var entry = _cachedWithParams.Get(hash, string.Empty);
+            if (entry.HasValue)
             {
-                creator = cachedCreator;
+                creator = entry.Value.Value;
             }
             else
             {
                 creator = GenerateFactoryWithParams(ctor);
-                _cachedWithParams.Add(type, creator);
+                _cachedWithParams.AddOrReplace(hash, string.Empty, creator);
             }
             return creator.Invoke(args);
         }

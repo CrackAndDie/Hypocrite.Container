@@ -14,7 +14,7 @@ namespace Hypocrite.Container.Creators
         {
             ConstructorInfo ctor = GetCtor(type, hash, out InjectionElement[] pars);
             object[] args = GetArguments(container, pars);
-            object instance = InstanceCreator.CreateWithParams(type, ctor, args);
+            object instance = InstanceCreator.CreateWithParams(hash, ctor, args);
             return instance;
         }
 
@@ -30,7 +30,7 @@ namespace Hypocrite.Container.Creators
             for (int i = 0; i < propsAndFields.Length; ++i)
                 data.Add(propsAndFields[i].Name, args[i]);
 
-            PropsAndFieldsInjector.Inject(type, instance, data);
+            PropsAndFieldsInjector.Inject(type, hash, instance, data);
         }
 
         internal static void InjectMethods(Type type, int hash, object instance, ILightContainer container)
@@ -44,7 +44,7 @@ namespace Hypocrite.Container.Creators
             foreach (var mtd in methods)
                 data.Add(mtd.Key, GetArguments(container, mtd.Value));
 
-            MethodsInjector.Inject(type, instance, data);
+            MethodsInjector.Inject(type, hash, instance, data);
         }
 
         private static readonly QuickSet<(ConstructorInfo, InjectionElement[])> _cachedCtors = new QuickSet<(ConstructorInfo, InjectionElement[])>();
