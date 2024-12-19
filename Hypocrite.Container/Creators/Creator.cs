@@ -63,6 +63,8 @@ namespace Hypocrite.Container.Creators
                     throw new EntryPointNotFoundException($"Ctor of {typeof(T).GetDescription()} that could be used for creation could not be found");
             }
             pars = ctor.GetParameters().Select(x => InjectionElement.FromParameterInfo(x)).ToArray();
+            // caching
+            _cachedCtors.Add(typeof(T), (ctor, pars));
             return ctor;
         }
 
@@ -92,6 +94,8 @@ namespace Hypocrite.Container.Creators
                 elements.Add(InjectionElement.FromFieldInfo(fieldInfo));
             }
             propsAndFields = elements.ToArray();
+            // caching
+            _cachedPropsAndFields.Add(typeof(T), propsAndFields);
         }
 
         private static readonly Dictionary<Type, Dictionary<string, InjectionElement[]>> _cachedMethods = new Dictionary<Type, Dictionary<string, InjectionElement[]>>();
@@ -117,6 +121,8 @@ namespace Hypocrite.Container.Creators
                 elements.Add(methodInfo.Name, pars);
             }
             methods = elements;
+            // caching
+            _cachedMethods.Add(typeof(T), methods);
         }
 
         private static object[] GetArguments(ILightContainer container, InjectionElement[] pars)
