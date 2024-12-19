@@ -21,7 +21,7 @@ namespace Hypocrite.Container.Creators
 
             // gen data
             Dictionary<string, object> data = new Dictionary<string, object>(propsAndFields.Length);
-            for (int i = 0; i < propsAndFields.Length; i++)
+            for (int i = 0; i < propsAndFields.Length; ++i)
                 data.Add(propsAndFields[i].Name, args[i]);
 
             PropsAndFieldsInjector.Inject(instance, data);
@@ -92,6 +92,31 @@ namespace Hypocrite.Container.Creators
                 elements.Add(InjectionElement.FromFieldInfo(fieldInfo));
             }
             propsAndFields = elements.ToArray();
+        }
+
+        private static readonly Dictionary<Type, Dictionary<string, InjectionElement[]>> _cachedMethods = new Dictionary<Type, Dictionary<string, InjectionElement[]>>();
+        private static void GetMethods<T>(out Dictionary<string, InjectionElement[]> methods)
+        {
+            // check for cache
+            if (_cachedMethods.TryGetValue(typeof(T), out var cachedMethods))
+            {
+                methods = cachedMethods;
+                return;
+            }
+
+            Dictionary<string, InjectionElement[]> elements = new Dictionary<string, InjectionElement[]>();
+            var methodInfos = typeof(T).GetTypeInfo().DeclaredMethods.Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null);
+            foreach (var methodInfo in methodInfos)
+            {
+                var methodPars = methodInfo.GetParameters();
+                InjectionElement[] pars = new InjectionElement[methodPars.Length];
+                for (int i = 0; i < methodPars.Length; ++i)
+                {
+                    pars[i] = InjectionElement.FromParameterInfo(methodPars[i]);
+                }
+                elements.Add(methodInfo.Name, pars);
+            }
+            methods = elements;
         }
 
         private static object[] GetArguments(ILightContainer container, InjectionElement[] pars)
