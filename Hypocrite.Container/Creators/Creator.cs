@@ -16,10 +16,18 @@ namespace Hypocrite.Container.Creators
 
         internal static void InjectPropsAndFields<T>(T instance, ILightContainer container)
         {
-            PropsAndFieldsInjector.Inject(instance, );
+            GetPropsAndFields<T>(out InjectionElement[] propsAndFields);
+            object[] args = GetArguments(container, propsAndFields);
+
+            // gen data
+            Dictionary<string, object> data = new Dictionary<string, object>(propsAndFields.Length);
+            for (int i = 0; i < propsAndFields.Length; i++)
+                data.Add(propsAndFields[i].Name, args[i]);
+
+            PropsAndFieldsInjector.Inject(instance, data);
         }
 
-        internal static void InjectMethods(ILightContainer container)
+        internal static void InjectMethods<T>(T instance, ILightContainer container)
         {
 
         }
