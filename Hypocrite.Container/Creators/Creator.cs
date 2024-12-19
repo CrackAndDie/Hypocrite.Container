@@ -29,6 +29,13 @@ namespace Hypocrite.Container.Creators
 
         internal static void InjectMethods<T>(T instance, ILightContainer container)
         {
+            GetMethods<T>(out Dictionary<string, InjectionElement[]> methods);
+
+            // gen data
+            Dictionary<string, object[]> data = new Dictionary<string, object[]>(methods.Count);
+            foreach (var mtd in methods)
+                data.Add(mtd.Key, GetArguments(container, mtd.Value));
+
 
         }
 
