@@ -1,7 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Hypocrite.Container;
 using Hypocrite.Container.Interfaces;
-using Ninject;
 using StyletIoC;
 using Unity;
 
@@ -12,7 +11,6 @@ namespace Hypocrite.Benchmarks.Tests
     {
         ILightContainer _lightContainer;
         IUnityContainer _unityContainer;
-        IKernel _ninjectContainer;
         IContainer _styletContainer;
 
         public PureResolveType()
@@ -22,9 +20,6 @@ namespace Hypocrite.Benchmarks.Tests
 
             _unityContainer = new UnityContainer();
             _unityContainer.RegisterType<Test_PureResolveType>();
-
-            _ninjectContainer = new StandardKernel();
-            _ninjectContainer.Bind<Test_PureResolveType>().ToSelf();
 
             var builder = new StyletIoCBuilder();
             builder.Bind<Test_PureResolveType>().ToSelf();
@@ -41,12 +36,6 @@ namespace Hypocrite.Benchmarks.Tests
         public Test_PureResolveType WithLightContainer()
         {
             return _lightContainer.Resolve<Test_PureResolveType>();
-        }
-
-        [Benchmark]
-        public Test_PureResolveType WithNinjectContainer()
-        {
-            return _ninjectContainer.Get<Test_PureResolveType>();
         }
 
         [Benchmark]
