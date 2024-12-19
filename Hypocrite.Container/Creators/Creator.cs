@@ -125,34 +125,39 @@ namespace Hypocrite.Container.Creators
 
             Dictionary<string, InjectionElement[]> elements = new Dictionary<string, InjectionElement[]>();
             var methodInfos = type.GetTypeInfo().DeclaredMethods.Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null);
+            ParameterInfo[] methodPars;
+            InjectionElement[] injectionPars;
             foreach (var methodInfo in methodInfos)
             {
                 if (methodInfo.IsStatic)
                     throw new MemberAccessException($"Methods with [InjectionAttribute] could not be static: {type.GetDescription()}.{methodInfo.Name}");
 
-                var methodPars = methodInfo.GetParameters();
-                InjectionElement[] pars = new InjectionElement[methodPars.Length];
+                methodPars = methodInfo.GetParameters();
+                injectionPars = new InjectionElement[methodPars.Length];
                 for (int i = 0; i < methodPars.Length; ++i)
                 {
-                    pars[i] = InjectionElement.FromParameterInfo(methodPars[i]);
+                    injectionPars[i] = InjectionElement.FromParameterInfo(methodPars[i]);
                 }
-                elements.Add(methodInfo.Name, pars);
+                elements.Add(methodInfo.Name, injectionPars);
             }
             methods = elements;
             // caching
             _cachedMethods.Add(hash, methods);
         }
-
+        
+        private static readonly object[] _constEmptyObjectArray = Array.Empty<object>();
         private static object[] GetArguments(ILightContainer container, InjectionElement[] pars)
         {
             if (pars.Length == 0)
-                return Array.Empty<object>();
+                return _constEmptyObjectArray;
 
             object[] args = new object[pars.Length];
+            InjectionElement par;
+            object arg;
             for (int i = 0; i < pars.Length; ++i)
             {
-                var par = pars[i];
-                var arg = GetArgument(container, par.ElementType);
+                par = pars[i];
+                arg = GetArgument(container, par.ElementType);
 
                 // if there was no the Type in container and param has default value - apply it
                 if (arg == null && par.HasDefaultValue)
