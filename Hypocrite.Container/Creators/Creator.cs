@@ -1,4 +1,5 @@
-﻿using Hypocrite.Container.Extensions;
+﻿using Hypocrite.Container.Common;
+using Hypocrite.Container.Extensions;
 using Hypocrite.Container.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -9,17 +10,19 @@ namespace Hypocrite.Container.Creators
 {
     internal static class Creator
     {
-        internal static object Create(Type type, ILightContainer container)
+        internal static object Create(Type type, int hash, ILightContainer container)
         {
-            ConstructorInfo ctor = GetCtor(type, out InjectionElement[] pars);
+            ConstructorInfo ctor = GetCtor(type, hash, out InjectionElement[] pars);
             object[] args = GetArguments(container, pars);
             object instance = InstanceCreator.CreateWithParams(type, ctor, args);
             return instance;
         }
 
-        internal static void InjectPropsAndFields(Type type, object instance, ILightContainer container)
+        internal static void InjectPropsAndFields(Type type, int hash, object instance, ILightContainer container)
         {
-            GetPropsAndFields(type, out InjectionElement[] propsAndFields);
+            GetPropsAndFields(type, hash, out InjectionElement[] propsAndFields);
+            if (propsAndFields.Length == 0)
+                return;
             object[] args = GetArguments(container, propsAndFields);
 
             // gen data
@@ -30,9 +33,11 @@ namespace Hypocrite.Container.Creators
             PropsAndFieldsInjector.Inject(type, instance, data);
         }
 
-        internal static void InjectMethods(Type type, object instance, ILightContainer container)
+        internal static void InjectMethods(Type type, int hash, object instance, ILightContainer container)
         {
-            GetMethods(type, out Dictionary<string, InjectionElement[]> methods);
+            GetMethods(type, hash, out Dictionary<string, InjectionElement[]> methods);
+            if (methods.Count == 0)
+                return;
 
             // gen data
             Dictionary<string, object[]> data = new Dictionary<string, object[]>(methods.Count);
@@ -42,14 +47,15 @@ namespace Hypocrite.Container.Creators
             MethodsInjector.Inject(type, instance, data);
         }
 
-        private static readonly Dictionary<Type, (ConstructorInfo, InjectionElement[])> _cachedCtors = new Dictionary<Type, (ConstructorInfo, InjectionElement[])>();
-        private static ConstructorInfo GetCtor(Type type, out InjectionElement[] pars)
+        private static readonly QuickSet<(ConstructorInfo, InjectionElement[])> _cachedCtors = new QuickSet<(ConstructorInfo, InjectionElement[])>();
+        private static ConstructorInfo GetCtor(Type type, int hash, out InjectionElement[] pars)
         {
             // check for cache
-            if (_cachedCtors.TryGetValue(type, out var cachedCtor))
+            var entry = _cachedCtors.Get(hash, string.Empty);
+            if (entry.HasValue)
             {
-                pars = cachedCtor.Item2;
-                return cachedCtor.Item1;
+                pars = entry.Value.Value.Item2;
+                return entry.Value.Value.Item1;
             }
 
             ConstructorInfo ctor;
@@ -74,17 +80,18 @@ namespace Hypocrite.Container.Creators
             }
             pars = ctor.GetParameters().Select(x => InjectionElement.FromParameterInfo(x)).ToArray();
             // caching
-            _cachedCtors.Add(type, (ctor, pars));
+            _cachedCtors.AddOrReplace(hash, string.Empty, (ctor, pars));
             return ctor;
         }
 
-        private static readonly Dictionary<Type, InjectionElement[]> _cachedPropsAndFields = new Dictionary<Type, InjectionElement[]>();
-        private static void GetPropsAndFields(Type type, out InjectionElement[] propsAndFields)
+        private static readonly QuickSet<InjectionElement[]> _cachedPropsAndFields = new QuickSet<InjectionElement[]>();
+        private static void GetPropsAndFields(Type type, int hash, out InjectionElement[] propsAndFields)
         {
             // check for cache
-            if (_cachedPropsAndFields.TryGetValue(type, out var cachedElements))
+            var entry = _cachedPropsAndFields.Get(hash, string.Empty);
+            if (entry.HasValue)
             {
-                propsAndFields = cachedElements;
+                propsAndFields = entry.Value.Value;
                 return;
             }
 
@@ -105,16 +112,17 @@ namespace Hypocrite.Container.Creators
             }
             propsAndFields = elements.ToArray();
             // caching
-            _cachedPropsAndFields.Add(type, propsAndFields);
+            _cachedPropsAndFields.AddOrReplace(hash, string.Empty, propsAndFields);
         }
 
-        private static readonly Dictionary<Type, Dictionary<string, InjectionElement[]>> _cachedMethods = new Dictionary<Type, Dictionary<string, InjectionElement[]>>();
-        private static void GetMethods(Type type, out Dictionary<string, InjectionElement[]> methods)
+        private static readonly QuickSet<Dictionary<string, InjectionElement[]>> _cachedMethods = new QuickSet<Dictionary<string, InjectionElement[]>>();
+        private static void GetMethods(Type type, int hash, out Dictionary<string, InjectionElement[]> methods)
         {
             // check for cache
-            if (_cachedMethods.TryGetValue(type, out var cachedMethods))
+            var entry = _cachedMethods.Get(hash, string.Empty);
+            if (entry.HasValue)
             {
-                methods = cachedMethods;
+                methods = entry.Value.Value;
                 return;
             }
 
@@ -135,11 +143,14 @@ namespace Hypocrite.Container.Creators
             }
             methods = elements;
             // caching
-            _cachedMethods.Add(type, methods);
+            _cachedMethods.AddOrReplace(hash, string.Empty, methods);
         }
 
         private static object[] GetArguments(ILightContainer container, InjectionElement[] pars)
         {
+            if (pars.Length == 0)
+                return Array.Empty<object>();
+
             object[] args = new object[pars.Length];
             for (int i = 0; i < pars.Length; ++i)
             {

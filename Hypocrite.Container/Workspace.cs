@@ -20,12 +20,13 @@ namespace Hypocrite.Container
 
         internal void Register(ContainerRegistration registation, string name)
         {
-            _registrations.AddOrReplace(registation.RegistrationType.GetHashCode(), name, registation);
+            _registrations.AddOrReplace(registation.RegisteredType.GetHashCode(), name, registation);
         }
 
         internal object Resolve(Type type, string name)
         {
-            var entry = _registrations.Get(type.GetHashCode(), name);
+            int hashCode = type.GetHashCode();
+            var entry = _registrations.Get(hashCode, name);
             if (entry == null)
                 throw new KeyNotFoundException($"Registration for type {type.GetDescription()} with name {name} could not be found");
 
@@ -43,13 +44,13 @@ namespace Hypocrite.Container
 
             // creating an instance and injecting everything
             if (registration.RegistrationType != RegistrationType.Factory)
-                registration.Instance = Creator.Create(type, _parent);
+                registration.Instance = Creator.Create(type, hashCode, _parent);
             else
                 registration.Instance = registration.Factory.Invoke(_parent, registration.RegisteredType, name);
 
             // injecting
-            Creator.InjectPropsAndFields(type, registration.Instance, _parent);
-            Creator.InjectMethods(type, registration.Instance, _parent);
+            Creator.InjectPropsAndFields(type, hashCode, registration.Instance, _parent);
+            Creator.InjectMethods(type, hashCode, registration.Instance, _parent);
 
             var result = registration.Instance;
             // reset cache if not instance

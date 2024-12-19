@@ -1,4 +1,8 @@
-﻿using System;
+﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Running;
+using System;
+using System.Linq;
+using System.Reflection;
 
 namespace Hypocrite.Benchmarks
 {
@@ -6,7 +10,19 @@ namespace Hypocrite.Benchmarks
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            // Use reflection for a more maintainable way of creating the benchmark switcher,
+            // Benchmarks are listed in namespace order first (e.g. BenchmarkDotNet.Samples.CPU,
+            // BenchmarkDotNet.Samples.IL, etc) then by name, so the output is easy to understand
+            var benchmarks = Assembly.GetExecutingAssembly().GetTypes()
+                .Where(t => t.GetMethods(BindingFlags.Instance | BindingFlags.Public)
+                             .Any(m => m.GetCustomAttributes(typeof(BenchmarkAttribute), false).Any()))
+                .OrderBy(t => t.Namespace)
+                .ThenBy(t => t.Name)
+                .ToArray();
+            var benchmarkSwitcher = new BenchmarkSwitcher(benchmarks);
+            benchmarkSwitcher.Run(args);
+
+            Console.ReadKey();
         }
     }
 }
