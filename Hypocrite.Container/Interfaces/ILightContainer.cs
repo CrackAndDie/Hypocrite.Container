@@ -28,5 +28,11 @@
         T Resolve<T>();
         object Resolve(Type type, string name);
         T Resolve<T>(string name);
+
+        // Checks
+        bool IsRegistered(Type type);
+        bool IsRegistered<TFrom>();
+        bool IsRegistered(Type type, string name);
+        bool IsRegistered<TFrom>(string name);
     }
 }
