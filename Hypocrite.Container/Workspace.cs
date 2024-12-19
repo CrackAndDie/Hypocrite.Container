@@ -9,7 +9,7 @@ namespace Hypocrite.Container
     internal class Workspace
     {
         private readonly ILightContainer _parent;
-        private QuickSet<ContainerRegistration> _registrations { get; set; } = new QuickSet<ContainerRegistration>();
+        private readonly QuickSet<ContainerRegistration> _registrations = new QuickSet<ContainerRegistration>();
 
         internal Workspace(ILightContainer parent)
         {
@@ -21,9 +21,8 @@ namespace Hypocrite.Container
             _registrations.AddOrReplace(registation.RegistrationType.GetHashCode(), name, registation);
         }
 
-        internal object Resolve<T>(string name)
+        internal object Resolve(Type type, string name)
         {
-            var type = typeof(T);
             var entry = _registrations.Get(type.GetHashCode(), name);
             if (entry == null)
                 throw new KeyNotFoundException($"Registration for type {type.GetDescription()} with name {name} could not be found");
@@ -42,13 +41,13 @@ namespace Hypocrite.Container
 
             // creating an instance and injecting everything
             if (registration.RegistrationType != RegistrationType.Factory)
-                registration.Instance = Creator.Create<T>(_parent);
+                registration.Instance = Creator.Create(type, _parent);
             else
                 registration.Instance = registration.Factory.Invoke(_parent, registration.RegisteredType, name);
 
             // injecting
-            Creator.InjectPropsAndFields<T>((T)registration.Instance, _parent);
-            Creator.InjectMethods<T>((T)registration.Instance, _parent);
+            Creator.InjectPropsAndFields(type, registration.Instance, _parent);
+            Creator.InjectMethods(type, registration.Instance, _parent);
 
             var result = registration.Instance;
             // reset cache if not instance
@@ -58,9 +57,8 @@ namespace Hypocrite.Container
             return result;
         }
 
-        internal bool IsRegistered<T>(string name)
+        internal bool IsRegistered(Type type, string name)
         {
-            var type = typeof(T);
             var entry = _registrations.Get(type.GetHashCode(), name);
             return entry != null;
         }
