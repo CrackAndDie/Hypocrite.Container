@@ -14,9 +14,9 @@
         void RegisterSingleton<TFrom, TTo>(string name);
         // Instance
         void RegisterInstance(Type fromT, object instance);
-        void RegisterInstance<TFrom, TTo>(TTo instance);
+        void RegisterInstance<TFrom>(object instance);
         void RegisterInstance(Type fromT, string name, object instance);
-        void RegisterInstance<TFrom, TTo>(string name, TTo instance);
+        void RegisterInstance<TFrom>(string name, object instance);
         // Factory
         void RegisterFactory(Type fromT, Func<ILightContainer, Type, string, object> factory);
         void RegisterFactory<TFrom>(Func<ILightContainer, Type, string, object> factory);

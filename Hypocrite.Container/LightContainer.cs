@@ -1,4 +1,5 @@
 ﻿using Hypocrite.Container.Interfaces;
+using Hypocrite.Container.Registrations;
 
 namespace Hypocrite.Container
 {
@@ -12,124 +13,220 @@ namespace Hypocrite.Container
 
         public bool IsRegistered(Type type)
         {
-            return _workspace.IsRegistered<type>();
+            return _workspace.IsRegistered(type, string.Empty);
         }
 
         public bool IsRegistered<TFrom>()
         {
-            throw new NotImplementedException();
+            return _workspace.IsRegistered(typeof(TFrom), string.Empty);
         }
 
         public bool IsRegistered(Type type, string name)
         {
-            throw new NotImplementedException();
+            return _workspace.IsRegistered(type, name);
         }
 
         public bool IsRegistered<TFrom>(string name)
         {
-            throw new NotImplementedException();
+            return _workspace.IsRegistered(typeof(TFrom), name);
         }
 
 
         public void Register(Type fromT, Type toT)
         {
-            throw new NotImplementedException();
+            _workspace.Register(new ContainerRegistration()
+            {
+                RegisteredType = fromT,
+                MappedToType = toT,
+                RegistrationType = RegistrationType.Type
+            }, 
+            string.Empty);
         }
 
         public void Register<TFrom, TTo>()
         {
-            throw new NotImplementedException();
+            _workspace.Register(new ContainerRegistration()
+            {
+                RegisteredType = typeof(TFrom),
+                MappedToType = typeof(TTo),
+                RegistrationType = RegistrationType.Type
+            },
+            string.Empty);
         }
 
         public void Register(Type fromT, Type toT, string name)
         {
-            throw new NotImplementedException();
+            _workspace.Register(new ContainerRegistration()
+            {
+                RegisteredType = fromT,
+                MappedToType = toT,
+                RegistrationType = RegistrationType.Type
+            },
+            name);
         }
 
         public void Register<TFrom, TTo>(string name)
         {
-            throw new NotImplementedException();
+            _workspace.Register(new ContainerRegistration()
+            {
+                RegisteredType = typeof(TFrom),
+                MappedToType = typeof(TTo),
+                RegistrationType = RegistrationType.Type
+            },
+            name);
         }
 
         public void RegisterFactory(Type fromT, Func<ILightContainer, Type, string, object> factory)
         {
-            throw new NotImplementedException();
+            _workspace.Register(new ContainerRegistration()
+            {
+                RegisteredType = fromT,
+                Factory = factory,
+                RegistrationType = RegistrationType.Factory
+            },
+            string.Empty);
         }
 
         public void RegisterFactory<TFrom>(Func<ILightContainer, Type, string, object> factory)
         {
-            throw new NotImplementedException();
+            _workspace.Register(new ContainerRegistration()
+            {
+                RegisteredType = typeof(TFrom),
+                Factory = factory,
+                RegistrationType = RegistrationType.Factory
+            },
+            string.Empty);
         }
 
         public void RegisterFactory(Type fromT, string name, Func<ILightContainer, Type, string, object> factory)
         {
-            throw new NotImplementedException();
+            _workspace.Register(new ContainerRegistration()
+            {
+                RegisteredType = fromT,
+                Factory = factory,
+                RegistrationType = RegistrationType.Factory
+            },
+            name);
         }
 
         public void RegisterFactory<TFrom>(string name, Func<ILightContainer, Type, string, object> factory)
         {
-            throw new NotImplementedException();
+            _workspace.Register(new ContainerRegistration()
+            {
+                RegisteredType = typeof(TFrom),
+                Factory = factory,
+                RegistrationType = RegistrationType.Factory
+            },
+            name);
         }
 
         public void RegisterInstance(Type fromT, object instance)
         {
-            throw new NotImplementedException();
+            _workspace.Register(new ContainerRegistration()
+            {
+                RegisteredType = fromT,
+                Instance = instance,
+                RegistrationType = RegistrationType.Instance
+            },
+            string.Empty);
         }
 
-        public void RegisterInstance<TFrom, TTo>(TTo instance)
+        public void RegisterInstance<TFrom>(object instance)
         {
-            throw new NotImplementedException();
+            _workspace.Register(new ContainerRegistration()
+            {
+                RegisteredType = typeof(TFrom),
+                Instance = instance,
+                RegistrationType = RegistrationType.Instance
+            },
+            string.Empty);
         }
 
         public void RegisterInstance(Type fromT, string name, object instance)
         {
-            throw new NotImplementedException();
+            _workspace.Register(new ContainerRegistration()
+            {
+                RegisteredType = fromT,
+                Instance = instance,
+                RegistrationType = RegistrationType.Instance
+            },
+            name);
         }
 
-        public void RegisterInstance<TFrom, TTo>(string name, TTo instance)
+        public void RegisterInstance<TFrom>(string name, object instance)
         {
-            throw new NotImplementedException();
+            _workspace.Register(new ContainerRegistration()
+            {
+                RegisteredType = typeof(TFrom),
+                Instance = instance,
+                RegistrationType = RegistrationType.Instance
+            },
+            name);
         }
 
         public void RegisterSingleton(Type fromT, Type toT)
         {
-            throw new NotImplementedException();
+            _workspace.Register(new ContainerRegistration()
+            {
+                RegisteredType = fromT,
+                MappedToType = toT,
+                RegistrationType = RegistrationType.Instance
+            },
+            string.Empty);
         }
 
         public void RegisterSingleton<TFrom, TTo>()
         {
-            throw new NotImplementedException();
+            _workspace.Register(new ContainerRegistration()
+            {
+                RegisteredType = typeof(TFrom),
+                MappedToType = typeof(TTo),
+                RegistrationType = RegistrationType.Instance
+            },
+            string.Empty);
         }
 
         public void RegisterSingleton(Type fromT, Type toT, string name)
         {
-            throw new NotImplementedException();
+            _workspace.Register(new ContainerRegistration()
+            {
+                RegisteredType = fromT,
+                MappedToType = toT,
+                RegistrationType = RegistrationType.Instance
+            },
+            name);
         }
 
         public void RegisterSingleton<TFrom, TTo>(string name)
         {
-            throw new NotImplementedException();
+            _workspace.Register(new ContainerRegistration()
+            {
+                RegisteredType = typeof(TFrom),
+                MappedToType = typeof(TTo),
+                RegistrationType = RegistrationType.Instance
+            },
+            name);
         }
 
 
         public object Resolve(Type type)
         {
-            throw new NotImplementedException();
+            return _workspace.Resolve(type, string.Empty);
         }
 
         public T Resolve<T>()
         {
-            throw new NotImplementedException();
+            return (T)_workspace.Resolve(typeof(T), string.Empty);
         }
 
         public object Resolve(Type type, string name)
         {
-            throw new NotImplementedException();
+            return _workspace.Resolve(type, name);
         }
 
         public T Resolve<T>(string name)
         {
-            throw new NotImplementedException();
+            return (T)_workspace.Resolve(typeof(T), name);
         }
     }
 }
