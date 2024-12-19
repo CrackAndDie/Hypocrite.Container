@@ -47,15 +47,14 @@ namespace Hypocrite.Container.Creators
             MethodsInjector.Inject(type, hash, instance, data);
         }
 
-        private static readonly QuickSet<(ConstructorInfo, InjectionElement[])> _cachedCtors = new QuickSet<(ConstructorInfo, InjectionElement[])>();
+        private static readonly Dictionary<int, (ConstructorInfo, InjectionElement[])> _cachedCtors = new Dictionary<int, (ConstructorInfo, InjectionElement[])>();
         private static ConstructorInfo GetCtor(Type type, int hash, out InjectionElement[] pars)
         {
             // check for cache
-            var entry = _cachedCtors.Get(hash, string.Empty);
-            if (entry.HasValue)
+            if (_cachedCtors.TryGetValue(hash, out var value))
             {
-                pars = entry.Value.Value.Item2;
-                return entry.Value.Value.Item1;
+                pars = value.Item2;
+                return value.Item1;
             }
 
             ConstructorInfo ctor;
@@ -80,18 +79,17 @@ namespace Hypocrite.Container.Creators
             }
             pars = ctor.GetParameters().Select(x => InjectionElement.FromParameterInfo(x)).ToArray();
             // caching
-            _cachedCtors.AddOrReplace(hash, string.Empty, (ctor, pars));
+            _cachedCtors.Add(hash, (ctor, pars));
             return ctor;
         }
 
-        private static readonly QuickSet<InjectionElement[]> _cachedPropsAndFields = new QuickSet<InjectionElement[]>();
+        private static readonly Dictionary<int, InjectionElement[]> _cachedPropsAndFields = new Dictionary<int, InjectionElement[]>();
         private static void GetPropsAndFields(Type type, int hash, out InjectionElement[] propsAndFields)
         {
             // check for cache
-            var entry = _cachedPropsAndFields.Get(hash, string.Empty);
-            if (entry.HasValue)
+            if (_cachedPropsAndFields.TryGetValue(hash, out var value))
             {
-                propsAndFields = entry.Value.Value;
+                propsAndFields = value;
                 return;
             }
 
@@ -112,17 +110,16 @@ namespace Hypocrite.Container.Creators
             }
             propsAndFields = elements.ToArray();
             // caching
-            _cachedPropsAndFields.AddOrReplace(hash, string.Empty, propsAndFields);
+            _cachedPropsAndFields.Add(hash, propsAndFields);
         }
 
-        private static readonly QuickSet<Dictionary<string, InjectionElement[]>> _cachedMethods = new QuickSet<Dictionary<string, InjectionElement[]>>();
+        private static readonly Dictionary<int, Dictionary<string, InjectionElement[]>> _cachedMethods = new Dictionary<int, Dictionary<string, InjectionElement[]>>();
         private static void GetMethods(Type type, int hash, out Dictionary<string, InjectionElement[]> methods)
         {
             // check for cache
-            var entry = _cachedMethods.Get(hash, string.Empty);
-            if (entry.HasValue)
+            if (_cachedMethods.TryGetValue(hash, out var value))
             {
-                methods = entry.Value.Value;
+                methods = value;
                 return;
             }
 
@@ -143,7 +140,7 @@ namespace Hypocrite.Container.Creators
             }
             methods = elements;
             // caching
-            _cachedMethods.AddOrReplace(hash, string.Empty, methods);
+            _cachedMethods.Add(hash, methods);
         }
 
         private static object[] GetArguments(ILightContainer container, InjectionElement[] pars)

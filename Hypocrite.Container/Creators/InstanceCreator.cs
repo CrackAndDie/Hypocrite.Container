@@ -10,20 +10,19 @@ namespace Hypocrite.Container.Creators
 {
     internal static class InstanceCreator
     {
-        private static readonly QuickSet<Func<object[], object>> _cachedWithParams = new QuickSet<Func<object[], object>>();
+        private static readonly Dictionary<int, Func<object[], object>> _cachedWithParams = new Dictionary<int, Func<object[], object>>();
         internal static object CreateWithParams(int hash, ConstructorInfo ctor, object[] args)
         {
             Func<object[], object> creator;
             // check for cache
-            var entry = _cachedWithParams.Get(hash, string.Empty);
-            if (entry.HasValue)
+            if (_cachedWithParams.TryGetValue(hash, out var value))
             {
-                creator = entry.Value.Value;
+                creator = value;
             }
             else
             {
                 creator = GenerateFactoryWithParams(ctor);
-                _cachedWithParams.AddOrReplace(hash, string.Empty, creator);
+                _cachedWithParams.Add(hash, creator);
             }
             return creator.Invoke(args);
         }
