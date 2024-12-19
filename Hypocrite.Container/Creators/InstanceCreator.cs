@@ -17,13 +17,13 @@ namespace Hypocrite.Container.Creators
             }
             else
             {
-                creator = GenerateFactoryWithParams<T>(ctor);
+                creator = GenerateFactoryWithParams(ctor);
                 _cachedWithParams.Add(typeof(T), creator);
             }
             return (T)creator.Invoke(args);
         }
 
-        private static Func<object[], object> GenerateFactoryWithParams<T>(ConstructorInfo ctor)
+        private static Func<object[], object> GenerateFactoryWithParams(ConstructorInfo ctor)
         {
             // Param for args of ctor
             var param = Expression.Parameter(typeof(object[]), "args");

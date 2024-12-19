@@ -4,9 +4,15 @@ namespace Hypocrite.Container
 {
     public class LightContainer : ILightContainer
     {
+        private readonly Workspace _workspace;
+        public LightContainer() 
+        {
+            _workspace = new Workspace(this);
+        }
+
         public bool IsRegistered(Type type)
         {
-            throw new NotImplementedException();
+            return _workspace.IsRegistered<type>();
         }
 
         public bool IsRegistered<TFrom>()
