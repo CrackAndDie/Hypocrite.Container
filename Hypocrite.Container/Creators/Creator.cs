@@ -119,6 +119,9 @@ namespace Hypocrite.Container.Creators
             var methodInfos = typeof(T).GetTypeInfo().DeclaredMethods.Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null);
             foreach (var methodInfo in methodInfos)
             {
+                if (methodInfo.IsStatic)
+                    throw new MemberAccessException($"Methods with [InjectionAttribute] could not be static: {typeof(T).GetDescription()}.{methodInfo.Name}");
+
                 var methodPars = methodInfo.GetParameters();
                 InjectionElement[] pars = new InjectionElement[methodPars.Length];
                 for (int i = 0; i < methodPars.Length; ++i)

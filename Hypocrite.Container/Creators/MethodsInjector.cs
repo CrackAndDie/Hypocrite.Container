@@ -38,7 +38,7 @@ namespace Hypocrite.Container.Creators
             var methodInfos = typeof(T).GetTypeInfo().DeclaredMethods;
             foreach (var methodInfo in methodInfos)
             {
-                if (!args.ContainsKey(methodInfo.Name))
+                if (!args.ContainsKey(methodInfo.Name) || args[methodInfo.Name].Length != methodInfo.GetParameters().Length)
                     continue;
 
                 Expression call = Expression.Call(
@@ -52,21 +52,32 @@ namespace Hypocrite.Container.Creators
                                    });
 
                 // Convert params to args
-                var methodArgs = methodInfo.GetParameters()
+                Expression[] methodArgs = methodInfo.GetParameters()
                     .Select((p, i) =>
                         Expression.Convert(
                             Expression.ArrayIndex(call, Expression.Constant(i)),
-                            p.ParameterType))
+                            p.ParameterType) as Expression)
                     .ToArray();
 
-                List<Expression> fullMethodArgs = new List<Expression>() { typedInstance };
-                fullMethodArgs.AddRange(methodArgs);
+                // Handle 'params' word as the last one
+                var lastParam = methodInfo.GetParameters().LastOrDefault();
+                if (lastParam?.IsDefined(typeof(ParamArrayAttribute), false) == true)
+                {
+                    // Создаем массив для параметра params
+                    var arrayExpr = Expression.NewArrayInit(
+                        lastParam.ParameterType.GetElementType(),
+                        methodArgs.Skip(lastParam.Position)
+                    );
+
+                    methodArgs = methodArgs.Take(lastParam.Position)
+                        .Concat(new[] { arrayExpr })
+                        .ToArray();
+                }
 
                 Expression methodCall = Expression.Call(
-                                  typeof(T),
-                                  methodInfo.Name,
-                                  null,
-                                  fullMethodArgs.ToArray());
+                                  typedInstance,
+                                  methodInfo,
+                                  methodArgs);
                 list.Add(methodCall);
             }
 
