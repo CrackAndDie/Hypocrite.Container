@@ -36,7 +36,7 @@ namespace Hypocrite.Container.Creators
             foreach (var mtd in methods)
                 data.Add(mtd.Key, GetArguments(container, mtd.Value));
 
-
+            MethodsInjector.Inject(instance, data);
         }
 
         private static readonly Dictionary<Type, (ConstructorInfo, InjectionElement[])> _cachedCtors = new Dictionary<Type, (ConstructorInfo, InjectionElement[])>();
