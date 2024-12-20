@@ -2,7 +2,7 @@
 
 namespace Hypocrite.Container.Common
 {
-	public class QuickSet<TValue>
+	public class QuickSet<TValue> where TValue : class
 	{
 		#region Fields
 		private const int HashMask = 0x7FFFFFFF;
@@ -28,16 +28,16 @@ namespace Hypocrite.Container.Common
 
 
 		#region Public Methods
-		public LightEntry<TValue>? Get(int hashCode, string name)
+		public TValue Get(int hashCode, string name)
 		{
 			var targetBucket = (hashCode & HashMask) % Buckets.Length;
 
 			for (var i = Buckets[targetBucket]; i >= 0; i = Entries[i].Next)
 			{
-				ref var candidate = ref Entries[i];
+				var candidate = Entries[i];
 				if (candidate.HashCode != hashCode || !string.IsNullOrWhiteSpace(name) && candidate.Name != name) continue;
 
-				return candidate;
+				return candidate.Value;
 			}
 
 			return null;
@@ -51,7 +51,7 @@ namespace Hypocrite.Container.Common
 			// Check for the existing 
 			for (var i = Buckets[targetBucket]; i >= 0; i = Entries[i].Next)
 			{
-				ref var candidate = ref Entries[i];
+				var candidate = Entries[i];
 				if (candidate.HashCode != hashCode || !string.IsNullOrWhiteSpace(name) && candidate.Name != name || !Equals(candidate.Value, value))
 				{
 					collisions++;

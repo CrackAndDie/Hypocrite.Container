@@ -7,4 +7,7 @@
 		<TargetFrameworks Condition=" '$(OS)' == 'Windows_NT' ">$(TargetFrameworks);net472</TargetFrameworks>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<PackageReference Include="FastExpressionCompiler" Version="5.0.0" />
+	</ItemGroup>
 </Project>

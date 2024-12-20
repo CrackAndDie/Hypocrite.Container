@@ -1,4 +1,5 @@
-﻿using Hypocrite.Container.Common;
+﻿using FastExpressionCompiler;
+using Hypocrite.Container.Common;
 using Hypocrite.Container.Extensions;
 using System;
 using System.Collections.Generic;
@@ -89,7 +90,7 @@ namespace Hypocrite.Container.Creators
 
             // Compiling the lambda
             var lambda = Expression.Lambda<Action<object, Dictionary<string, object[]>>>(blockExpr, instanceParam, dictParam);
-            return lambda.Compile();
+            return lambda.CompileFast();
         }
     }
 }

@@ -26,11 +26,9 @@ namespace Hypocrite.Container
         internal object Resolve(Type type, string name)
         {
             int hashCode = type.GetHashCode();
-            var entry = _registrations.Get(hashCode, name);
-            if (entry == null)
+            var registration = _registrations.Get(hashCode, name);
+            if (registration == null)
                 throw new KeyNotFoundException($"Registration for type {type.GetDescription()} with name {name} could not be found");
-
-            var registration = entry.Value.Value;
 
             // this is a cache for recursive resolve
             if (registration.RegistrationType == RegistrationType.Type && registration.Instance != null)
@@ -49,10 +47,10 @@ namespace Hypocrite.Container
                 registration.Instance = registration.Factory.Invoke(_parent, registration.RegisteredType, name);
 
             // injecting
-            Creator.InjectPropsAndFields(type, hashCode, registration.Instance, _parent);
-            Creator.InjectMethods(type, hashCode, registration.Instance, _parent);
-
             var result = registration.Instance;
+            Creator.InjectPropsAndFields(type, hashCode, result, _parent);
+            Creator.InjectMethods(type, hashCode, result, _parent);
+            
             // reset cache if not instance
             if (registration.RegistrationType != RegistrationType.Instance)
                 registration.Instance = null;

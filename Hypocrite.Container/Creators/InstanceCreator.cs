@@ -1,10 +1,10 @@
-﻿using System.Linq.Expressions;
-using System.Reflection.Emit;
+﻿using System.Reflection.Emit;
 using System.Reflection;
 using System.Collections.Generic;
 using System;
 using System.Linq;
-using Hypocrite.Container.Common;
+using System.Linq.Expressions;
+using FastExpressionCompiler;
 
 namespace Hypocrite.Container.Creators
 {
@@ -45,7 +45,7 @@ namespace Hypocrite.Container.Creators
 
             // Compiling the lambda
             var lambda = Expression.Lambda<Func<object[], object>>(newExpr, param);
-            return lambda.Compile();
+            return lambda.CompileFast();
         }
     }
 }
