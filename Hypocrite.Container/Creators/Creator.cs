@@ -123,7 +123,7 @@ namespace Hypocrite.Container.Creators
             for (int i = 0; i < pars.Length; ++i)
             {
                 par = pars[i];
-                arg = GetArgument(container, par.ElementType);
+                arg = container.Resolve(par.ElementType);
 
                 // if there was no the Type in container and param has default value - apply it
                 if (arg == null && par.HasDefaultValue)
@@ -134,19 +134,6 @@ namespace Hypocrite.Container.Creators
                 args[i] = arg;
             }
             return args;
-        }
-
-        private static object GetArgument(ILightContainer container, Type type)
-        {
-            try
-            {
-                return container.Resolve(type);
-            }
-            catch (KeyNotFoundException)
-            {
-                // if the entry not found
-                return null;
-            }
         }
 
         /// <summary>
