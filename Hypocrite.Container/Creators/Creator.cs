@@ -10,45 +10,8 @@ namespace Hypocrite.Container.Creators
 {
     internal static class Creator
     {
-        internal static object Create(Type type, int hash, ILightContainer container)
-        {
-            ConstructorInfo ctor = GetCtor(type, hash, out InjectionElement[] pars);
-            object[] args = GetArguments(container, pars);
-            object instance = InstanceCreator.CreateWithParams(hash, ctor, args);
-            return instance;
-        }
-
-        internal static void InjectPropsAndFields(Type type, int hash, object instance, ILightContainer container)
-        {
-            GetPropsAndFields(type, hash, out InjectionElement[] propsAndFields);
-            if (propsAndFields.Length == 0)
-                return;
-            object[] args = GetArguments(container, propsAndFields);
-
-            // gen data
-            Dictionary<string, object> data = new Dictionary<string, object>(propsAndFields.Length);
-            for (int i = 0; i < propsAndFields.Length; ++i)
-                data.Add(propsAndFields[i].Name, args[i]);
-
-            PropsAndFieldsInjector.Inject(type, hash, instance, data);
-        }
-
-        internal static void InjectMethods(Type type, int hash, object instance, ILightContainer container)
-        {
-            GetMethods(type, hash, out Dictionary<string, InjectionElement[]> methods);
-            if (methods.Count == 0)
-                return;
-
-            // gen data
-            Dictionary<string, object[]> data = new Dictionary<string, object[]>(methods.Count);
-            foreach (var mtd in methods)
-                data.Add(mtd.Key, GetArguments(container, mtd.Value));
-
-            MethodsInjector.Inject(type, hash, instance, data);
-        }
-
         private static readonly Dictionary<int, (ConstructorInfo, InjectionElement[])> _cachedCtors = new Dictionary<int, (ConstructorInfo, InjectionElement[])>();
-        private static ConstructorInfo GetCtor(Type type, int hash, out InjectionElement[] pars)
+        internal static ConstructorInfo GetCtor(Type type, int hash, out InjectionElement[] pars)
         {
             // check for cache
             if (_cachedCtors.TryGetValue(hash, out var value))
@@ -84,7 +47,7 @@ namespace Hypocrite.Container.Creators
         }
 
         private static readonly Dictionary<int, InjectionElement[]> _cachedPropsAndFields = new Dictionary<int, InjectionElement[]>();
-        private static void GetPropsAndFields(Type type, int hash, out InjectionElement[] propsAndFields)
+        internal static void GetPropsAndFields(Type type, int hash, out InjectionElement[] propsAndFields)
         {
             // check for cache
             if (_cachedPropsAndFields.TryGetValue(hash, out var value))
@@ -114,7 +77,7 @@ namespace Hypocrite.Container.Creators
         }
 
         private static readonly Dictionary<int, Dictionary<string, InjectionElement[]>> _cachedMethods = new Dictionary<int, Dictionary<string, InjectionElement[]>>();
-        private static void GetMethods(Type type, int hash, out Dictionary<string, InjectionElement[]> methods)
+        internal static void GetMethods(Type type, int hash, out Dictionary<string, InjectionElement[]> methods)
         {
             // check for cache
             if (_cachedMethods.TryGetValue(hash, out var value))
@@ -146,7 +109,7 @@ namespace Hypocrite.Container.Creators
         }
         
         private static readonly object[] _constEmptyObjectArray = Array.Empty<object>();
-        private static object[] GetArguments(ILightContainer container, InjectionElement[] pars)
+        internal static object[] GetArguments(ILightContainer container, InjectionElement[] pars)
         {
             if (pars.Length == 0)
                 return _constEmptyObjectArray;
@@ -186,7 +149,7 @@ namespace Hypocrite.Container.Creators
         /// <summary>
         /// Common class for params/fields/props
         /// </summary>
-        private class InjectionElement
+        internal class InjectionElement
         {
             public string Name { get; set; }
             public bool HasDefaultValue { get; set; }

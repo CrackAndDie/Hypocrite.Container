@@ -67,11 +67,5 @@ namespace Hypocrite.Benchmarks.Tests
                 return registration.Instance;
             return null;
         }
-
-        [Benchmark]
-        public Test_PureResolveType WithCreateContainer()
-        {
-            return Creator.Create(typeof(Test_PureResolveType), typeof(Test_PureResolveType).GetHashCode(), null) as Test_PureResolveType;
-        }
     }
 }

@@ -5,6 +5,10 @@ using Hypocrite.Container.Interfaces;
 using Hypocrite.Container.Registrations;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Reflection;
+using System.Xml.Linq;
+using static Hypocrite.Container.Creators.Creator;
 
 namespace Hypocrite.Container
 {
@@ -42,14 +46,45 @@ namespace Hypocrite.Container
 
             // creating an instance and injecting everything
             if (registration.RegistrationType != RegistrationType.Factory)
-                registration.Instance = Creator.Create(type, hashCode, _parent);
+            {
+                ConstructorInfo ctor = GetCtor(type, hashCode, out InjectionElement[] pars);
+                object[] args = GetArguments(_parent, pars);
+                registration.Instance = InstanceCreator.CreateWithParams(hashCode, ctor, args);
+            }
             else
                 registration.Instance = registration.Factory.Invoke(_parent, registration.RegisteredType, name);
 
             // injecting
             var result = registration.Instance;
-            Creator.InjectPropsAndFields(type, hashCode, result, _parent);
-            Creator.InjectMethods(type, hashCode, result, _parent);
+
+            // props/fields
+            {
+                GetPropsAndFields(type, hashCode, out InjectionElement[] propsAndFields);
+                if (propsAndFields.Length > 0)
+                {
+                    object[] args = GetArguments(_parent, propsAndFields);
+
+                    // gen data
+                    Dictionary<string, object> data = new Dictionary<string, object>(propsAndFields.Length);
+                    for (int i = 0; i < propsAndFields.Length; ++i)
+                        data.Add(propsAndFields[i].Name, args[i]);
+
+                    PropsAndFieldsInjector.Inject(type, hashCode, result, data);
+                }
+            }
+            // nethods
+            {
+                GetMethods(type, hashCode, out Dictionary<string, InjectionElement[]> methods);
+                if (methods.Count > 0)
+                {
+                    // gen data
+                    Dictionary<string, object[]> data = new Dictionary<string, object[]>(methods.Count);
+                    foreach (var mtd in methods)
+                        data.Add(mtd.Key, GetArguments(_parent, mtd.Value));
+
+                    MethodsInjector.Inject(type, hashCode, result, data);
+                }
+            }
             
             // reset cache if not instance
             if (registration.RegistrationType != RegistrationType.Instance)
