@@ -5,24 +5,26 @@ using System;
 using System.Linq;
 using System.Linq.Expressions;
 using FastExpressionCompiler;
+using Hypocrite.Container.Common;
 
 namespace Hypocrite.Container.Creators
 {
     internal static class InstanceCreator
     {
-        private static readonly Dictionary<int, Func<object[], object>> _cachedWithParams = new Dictionary<int, Func<object[], object>>();
+        private static readonly QuickQuickSet<Func<object[], object>> _cachedWithParams = new QuickQuickSet<Func<object[], object>>();
         internal static object CreateWithParams(int hash, ConstructorInfo ctor, object[] args)
         {
             Func<object[], object> creator;
             // check for cache
-            if (_cachedWithParams.TryGetValue(hash, out var value))
+            var value = _cachedWithParams.Get(hash);
+            if (value != null)
             {
                 creator = value;
             }
             else
             {
                 creator = GenerateFactoryWithParams(ctor);
-                _cachedWithParams.Add(hash, creator);
+                _cachedWithParams.AddOrReplace(hash, creator);
             }
             return creator.Invoke(args);
         }

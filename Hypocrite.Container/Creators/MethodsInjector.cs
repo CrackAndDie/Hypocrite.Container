@@ -11,19 +11,20 @@ namespace Hypocrite.Container.Creators
 {
     internal static class MethodsInjector
     {
-        private static readonly Dictionary<int, Action<object, Dictionary<string, object[]>>> _cachedWithParams = new Dictionary<int, Action<object, Dictionary<string, object[]>>>();
+        private static readonly QuickQuickSet<Action<object, Dictionary<string, object[]>>> _cachedWithParams = new QuickQuickSet<Action<object, Dictionary<string, object[]>>>();
         internal static void Inject(Type type, int hash, object instance, Dictionary<string, object[]> args)
         {
             Action<object, Dictionary<string, object[]>> injector;
             // check for cache
-            if (_cachedWithParams.TryGetValue(hash, out var value))
+            var value = _cachedWithParams.Get(hash);
+            if (value != null)
             {
                 injector = value;
             }
             else
             {
                 injector = GenerateFactoryWithParams(type, args);
-                _cachedWithParams.Add(hash, injector);
+                _cachedWithParams.AddOrReplace(hash, injector);
             }
             injector.Invoke(instance, args);
         }
