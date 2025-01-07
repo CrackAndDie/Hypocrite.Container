@@ -6,60 +6,66 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Xml.Linq;
 
 namespace Hypocrite.Container.Creators
 {
     internal class Creator
     {
-        private readonly QuickSet<CreationInfo> _creationInfo = new QuickSet<CreationInfo>();
-        private object Create(Type type, int hash, string name, ILightContainer container)
+        internal static CreationInfo GetCreationInfo(Type type, bool skipCtor)
         {
-            var info = _creationInfo.Get(hash, name);
-            if (info == null)
-            {
-                // create new one
-                info = new CreationInfo();
+            // create new one
+            var info = new CreationInfo();
 
+            // if not skip ctor info
+            if (!skipCtor)
+            {
                 ConstructorInfo ctor = GetCtor(type, out InjectionElement[] pars);
                 var lambda = InstanceCreator.CreateLambda(ctor);
 
                 // save info 
                 info.CtorData = Tuple.Create(ctor, pars);
                 info.CtorLambda = lambda;
-
-                // props/fields
-                {
-                    GetPropsAndFields(type, out InjectionElement[] propsAndFields);
-                    info.PropsAndFieldsData = propsAndFields;
-                    if (propsAndFields.Length > 0)
-                    {
-                        var inj = PropsAndFieldsInjector.CreateInjector(type, propsAndFields.Select(x => x.Name).ToArray());
-                        info.PropsAndFieldsInjector = inj;
-                    }
-                }
-                // nethods
-                {
-                    GetMethods(type, out Dictionary<string, InjectionElement[]> methods);
-                    info.MethodsData = methods;
-                    if (methods.Count > 0)
-                    {
-                        // gen data
-                        Dictionary<string, object[]> data = new Dictionary<string, object[]>(methods.Count);
-                        foreach (var mtd in methods) data.Add(mtd.Key, mtd.Value);
-
-                        var inj = MethodsInjector.CreateInjector(type, data);
-                        info.MethodsInjector = inj;
-                    }
-                }
-
-                // caching
-                _creationInfo.AddOrReplace(hash, name, info);
             }
 
+            // props/fields
+            {
+                GetPropsAndFields(type, out InjectionElement[] propsAndFields);
+                info.PropsAndFieldsData = propsAndFields;
+                if (propsAndFields.Length > 0)
+                {
+                    var inj = PropsAndFieldsInjector.CreateInjector(type, propsAndFields.Select(x => x.Name).ToArray());
+                    info.PropsAndFieldsInjector = inj;
+                }
+            }
+
+            // methods
+            {
+                GetMethods(type, out Dictionary<string, InjectionElement[]> methods);
+                info.MethodsData = methods;
+                if (methods.Count > 0)
+                {
+                    // gen data
+                    Dictionary<string, object[]> data = new Dictionary<string, object[]>(methods.Count);
+                    foreach (var mtd in methods) data.Add(mtd.Key, mtd.Value);
+
+                    var inj = MethodsInjector.CreateInjector(type, data);
+                    info.MethodsInjector = inj;
+                }
+            }
+            return info;
+        }
+
+        internal static object Create(CreationInfo info, ILightContainer container)
+        {
             // creating an object
             object[] ctorArgs = GetArguments(container, info.CtorData.Item2);
             var obj = info.CtorLambda.Invoke(ctorArgs);
+            return obj;
+        }
 
+        internal static void Inject(object instance, CreationInfo info, ILightContainer container)
+        {
             // props/fields
             {
                 var data = info.PropsAndFieldsData;
@@ -72,7 +78,7 @@ namespace Hypocrite.Container.Creators
                     for (int i = 0; i < dataLen; ++i)
                         dt.Add(data[i].Name, args[i]);
 
-                    info.PropsAndFieldsInjector.Invoke(obj, dt);
+                    info.PropsAndFieldsInjector.Invoke(instance, dt);
                 }
             }
             // nethods
@@ -86,14 +92,12 @@ namespace Hypocrite.Container.Creators
                     foreach (var mtd in data)
                         dt.Add(mtd.Key, GetArguments(container, mtd.Value));
 
-                    info.MethodsInjector.Invoke(obj, dt);
+                    info.MethodsInjector.Invoke(instance, dt);
                 }
             }
-
-            return obj;
         }
 
-        internal static ConstructorInfo GetCtor(Type type, out InjectionElement[] pars)
+        private static ConstructorInfo GetCtor(Type type, out InjectionElement[] pars)
         {
             ConstructorInfo ctor;
             var ctorsWithAttribute = type.GetConstructors().Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null).ToList();
@@ -119,7 +123,7 @@ namespace Hypocrite.Container.Creators
             return ctor;
         }
 
-        internal static void GetPropsAndFields(Type type, out InjectionElement[] propsAndFields)
+        private static void GetPropsAndFields(Type type, out InjectionElement[] propsAndFields)
         {
             List<InjectionElement> elements = new List<InjectionElement>();
             // props shite
@@ -139,7 +143,7 @@ namespace Hypocrite.Container.Creators
             propsAndFields = elements.ToArray();
         }
 
-        internal static void GetMethods(Type type, out Dictionary<string, InjectionElement[]> methods)
+        private static void GetMethods(Type type, out Dictionary<string, InjectionElement[]> methods)
         {
             Dictionary<string, InjectionElement[]> elements = new Dictionary<string, InjectionElement[]>();
             var methodInfos = type.GetTypeInfo().DeclaredMethods.Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null);
@@ -162,7 +166,7 @@ namespace Hypocrite.Container.Creators
         }
         
         private static readonly object[] _constEmptyObjectArray = Array.Empty<object>();
-        internal static object[] GetArguments(ILightContainer container, InjectionElement[] pars)
+        private static object[] GetArguments(ILightContainer container, InjectionElement[] pars)
         {
             if (pars.Length == 0)
                 return _constEmptyObjectArray;
