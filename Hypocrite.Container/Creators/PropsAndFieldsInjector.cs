@@ -11,23 +11,9 @@ namespace Hypocrite.Container.Creators
 {
     internal static class PropsAndFieldsInjector
     {
-        internal static Action<object, Dictionary<string, object>> CreateInjector(Type type, int hash, object instance, Dictionary<string, object> args)
+        internal static Action<object, Dictionary<string, object>> CreateInjector(Type type, string[] names)
         {
-            Action<object, Dictionary<string, object>> injector;
-            // check for cache
-            var value = _cachedWithParams.Get(hash);
-            if (value != null)
-            {
-                injector = value;
-            }
-            else
-            {
-                injector = GenerateFactoryWithParams(type, args.Keys.ToArray());
-                _cachedWithParams.AddOrReplace(hash, injector);
-            }
-            injector.Invoke(instance, args);
-
-            return GenerateFactoryWithParams(type, args.Keys.ToArray());
+            return GenerateFactoryWithParams(type, names);
         }
 
         private static Action<object, Dictionary<string, object>> GenerateFactoryWithParams(Type type, string[] keys)

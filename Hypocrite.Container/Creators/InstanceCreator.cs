@@ -11,20 +11,8 @@ namespace Hypocrite.Container.Creators
 {
     internal static class InstanceCreator
     {
-        internal static Func<object[], object> CreateLambda(int hash, ConstructorInfo ctor, object[] args)
+        internal static Func<object[], object> CreateLambda(ConstructorInfo ctor)
         {
-            Func<object[], object> creator;
-            // check for cache
-            var value = _cachedWithParams.Get(hash);
-            if (value != null)
-            {
-                creator = value;
-            }
-            else
-            {
-                creator = GenerateFactoryWithParams(ctor);
-                _cachedWithParams.AddOrReplace(hash, creator);
-            }
             return GenerateFactoryWithParams(ctor);
         }
 
