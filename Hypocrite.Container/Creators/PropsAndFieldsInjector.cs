@@ -11,8 +11,7 @@ namespace Hypocrite.Container.Creators
 {
     internal static class PropsAndFieldsInjector
     {
-        private static readonly QuickQuickSet<Action<object, Dictionary<string, object>>> _cachedWithParams = new QuickQuickSet<Action<object, Dictionary<string, object>>>();
-        internal static void Inject(Type type, int hash, object instance, Dictionary<string, object> args)
+        internal static Action<object, Dictionary<string, object>> CreateInjector(Type type, int hash, object instance, Dictionary<string, object> args)
         {
             Action<object, Dictionary<string, object>> injector;
             // check for cache
@@ -27,6 +26,8 @@ namespace Hypocrite.Container.Creators
                 _cachedWithParams.AddOrReplace(hash, injector);
             }
             injector.Invoke(instance, args);
+
+            return GenerateFactoryWithParams(type, args.Keys.ToArray());
         }
 
         private static Action<object, Dictionary<string, object>> GenerateFactoryWithParams(Type type, string[] keys)

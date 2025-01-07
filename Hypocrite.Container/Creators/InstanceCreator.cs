@@ -11,8 +11,7 @@ namespace Hypocrite.Container.Creators
 {
     internal static class InstanceCreator
     {
-        private static readonly QuickQuickSet<Func<object[], object>> _cachedWithParams = new QuickQuickSet<Func<object[], object>>();
-        internal static object CreateWithParams(int hash, ConstructorInfo ctor, object[] args)
+        internal static Func<object[], object> CreateLambda(int hash, ConstructorInfo ctor, object[] args)
         {
             Func<object[], object> creator;
             // check for cache
@@ -26,7 +25,7 @@ namespace Hypocrite.Container.Creators
                 creator = GenerateFactoryWithParams(ctor);
                 _cachedWithParams.AddOrReplace(hash, creator);
             }
-            return creator.Invoke(args);
+            return GenerateFactoryWithParams(ctor);
         }
 
         private static Func<object[], object> GenerateFactoryWithParams(ConstructorInfo ctor)

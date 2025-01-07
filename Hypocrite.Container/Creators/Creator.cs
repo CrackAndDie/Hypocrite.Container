@@ -10,17 +10,46 @@ namespace Hypocrite.Container.Creators
 {
     internal static class Creator
     {
-        private static readonly QuickQuickSet<Tuple<ConstructorInfo, InjectionElement[]>> _cachedCtors = new QuickQuickSet<Tuple<ConstructorInfo, InjectionElement[]>>();
-        internal static ConstructorInfo GetCtor(Type type, int hash, out InjectionElement[] pars)
+        private static object Create(Type type, int hash, string name, ILightContainer container)
         {
-            // check for cache
-            var value = _cachedCtors.Get(hash);
-            if (value != null)
+            ConstructorInfo ctor = GetCtor(type, hash, out InjectionElement[] pars);
+            object[] ctorArgs = GetArguments(container, pars);
+            var obj = InstanceCreator.CreateWithParams(hash, ctor, ctorArgs);
+
+            // props/fields
             {
-                pars = value.Item2;
-                return value.Item1;
+                GetPropsAndFields(type, hash, out InjectionElement[] propsAndFields);
+                if (propsAndFields.Length > 0)
+                {
+                    object[] args = GetArguments(container, propsAndFields);
+
+                    // gen data
+                    Dictionary<string, object> data = new Dictionary<string, object>(propsAndFields.Length);
+                    for (int i = 0; i < propsAndFields.Length; ++i)
+                        data.Add(propsAndFields[i].Name, args[i]);
+
+                    PropsAndFieldsInjector.Inject(type, hash, obj, data);
+                }
+            }
+            // nethods
+            {
+                GetMethods(type, hash, out Dictionary<string, InjectionElement[]> methods);
+                if (methods.Count > 0)
+                {
+                    // gen data
+                    Dictionary<string, object[]> data = new Dictionary<string, object[]>(methods.Count);
+                    foreach (var mtd in methods)
+                        data.Add(mtd.Key, GetArguments(container, mtd.Value));
+
+                    MethodsInjector.Inject(type, hash, obj, data);
+                }
             }
 
+            return obj;
+        }
+
+        internal static ConstructorInfo GetCtor(Type type, int hash, out InjectionElement[] pars)
+        {
             ConstructorInfo ctor;
             var ctorsWithAttribute = type.GetConstructors().Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null).ToList();
             if (ctorsWithAttribute.Count > 1)
@@ -47,17 +76,8 @@ namespace Hypocrite.Container.Creators
             return ctor;
         }
 
-        private static readonly QuickQuickSet<InjectionElement[]> _cachedPropsAndFields = new QuickQuickSet<InjectionElement[]>();
         internal static void GetPropsAndFields(Type type, int hash, out InjectionElement[] propsAndFields)
         {
-            // check for cache
-            var value = _cachedPropsAndFields.Get(hash);
-            if (value != null)
-            {
-                propsAndFields = value;
-                return;
-            }
-
             List<InjectionElement> elements = new List<InjectionElement>();
             // props shite
             var propertyInfos = type.GetTypeInfo().DeclaredProperties.Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null);
@@ -78,17 +98,8 @@ namespace Hypocrite.Container.Creators
             _cachedPropsAndFields.AddOrReplace(hash, propsAndFields);
         }
 
-        private static readonly QuickQuickSet<Dictionary<string, InjectionElement[]>> _cachedMethods = new QuickQuickSet<Dictionary<string, InjectionElement[]>>();
         internal static void GetMethods(Type type, int hash, out Dictionary<string, InjectionElement[]> methods)
         {
-            // check for cache
-            var value = _cachedMethods.Get(hash);
-            if (value != null)
-            {
-                methods = value;
-                return;
-            }
-
             Dictionary<string, InjectionElement[]> elements = new Dictionary<string, InjectionElement[]>();
             var methodInfos = type.GetTypeInfo().DeclaredMethods.Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null);
             ParameterInfo[] methodPars;
