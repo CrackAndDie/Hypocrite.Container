@@ -11,14 +11,12 @@ namespace Hypocrite.Container
     internal class Workspace
     {
         private readonly ILightContainer _parent;
-        private readonly Creator _creator;
         private readonly QuickSet<CreationInfo> _creationInfo = new QuickSet<CreationInfo>();
         private readonly QuickSet<ContainerRegistration> _registrations = new QuickSet<ContainerRegistration>();
 
         internal Workspace(ILightContainer parent)
         {
             _parent = parent;
-            _creator = new Creator();
         }
 
         internal void Register(ContainerRegistration registation, string name)
@@ -49,9 +47,9 @@ namespace Hypocrite.Container
                 // getting info of the shite
                 var info = _creationInfo.Get(hashCode, name);
                 // check for existance
-                if (info == null && registration.Instance != null)
+                if (info == null)
                 {
-                    info = Creator.GetCreationInfo(registration.MappedToType, true);
+                    info = Creator.GetCreationInfo(registration.MappedToType, false);
                     _creationInfo.AddOrReplace(hashCode, name, info);
                 }
 

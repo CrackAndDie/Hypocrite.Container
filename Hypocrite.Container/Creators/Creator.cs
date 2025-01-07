@@ -10,7 +10,7 @@ using System.Xml.Linq;
 
 namespace Hypocrite.Container.Creators
 {
-    internal class Creator
+    internal static class Creator
     {
         internal static CreationInfo GetCreationInfo(Type type, bool skipCtor)
         {
