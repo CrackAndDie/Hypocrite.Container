@@ -1,26 +1,104 @@
 ﻿using Hypocrite.Container.Common;
 using Hypocrite.Container.Extensions;
 using Hypocrite.Container.Interfaces;
+using Hypocrite.Container.Registrations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Xml.Linq;
 
 namespace Hypocrite.Container.Creators
 {
     internal static class Creator
     {
-        private static readonly QuickQuickSet<Tuple<ConstructorInfo, InjectionElement[]>> _cachedCtors = new QuickQuickSet<Tuple<ConstructorInfo, InjectionElement[]>>();
-        internal static ConstructorInfo GetCtor(Type type, int hash, out InjectionElement[] pars)
+        internal static CreationInfo GetCreationInfo(Type type, bool skipCtor)
         {
-            // check for cache
-            var value = _cachedCtors.Get(hash);
-            if (value != null)
+            // create new one
+            var info = new CreationInfo();
+
+            // if not skip ctor info
+            if (!skipCtor)
             {
-                pars = value.Item2;
-                return value.Item1;
+                ConstructorInfo ctor = GetCtor(type, out InjectionElement[] pars);
+                var lambda = InstanceCreator.CreateLambda(ctor);
+
+                // save info 
+                info.CtorData = Tuple.Create(ctor, pars);
+                info.CtorLambda = lambda;
             }
 
+            // props/fields
+            {
+                GetPropsAndFields(type, out InjectionElement[] propsAndFields);
+                info.PropsAndFieldsData = propsAndFields;
+                if (propsAndFields.Length > 0)
+                {
+                    var inj = PropsAndFieldsInjector.CreateInjector(type, propsAndFields.Select(x => x.Name).ToArray());
+                    info.PropsAndFieldsInjector = inj;
+                }
+            }
+
+            // methods
+            {
+                GetMethods(type, out Dictionary<string, InjectionElement[]> methods);
+                info.MethodsData = methods;
+                if (methods.Count > 0)
+                {
+                    // gen data
+                    Dictionary<string, object[]> data = new Dictionary<string, object[]>(methods.Count);
+                    foreach (var mtd in methods) data.Add(mtd.Key, mtd.Value);
+
+                    var inj = MethodsInjector.CreateInjector(type, data);
+                    info.MethodsInjector = inj;
+                }
+            }
+            return info;
+        }
+
+        internal static object Create(CreationInfo info, ILightContainer container)
+        {
+            // creating an object
+            object[] ctorArgs = GetArguments(container, info.CtorData.Item2);
+            var obj = info.CtorLambda.Invoke(ctorArgs);
+            return obj;
+        }
+
+        internal static void Inject(object instance, CreationInfo info, ILightContainer container)
+        {
+            // props/fields
+            {
+                var data = info.PropsAndFieldsData;
+                var dataLen = data.Length;
+                if (dataLen > 0)
+                {
+                    object[] args = GetArguments(container, info.PropsAndFieldsData);
+                    // gen data
+                    Dictionary<string, object> dt = new Dictionary<string, object>(dataLen);
+                    for (int i = 0; i < dataLen; ++i)
+                        dt.Add(data[i].Name, args[i]);
+
+                    info.PropsAndFieldsInjector.Invoke(instance, dt);
+                }
+            }
+            // nethods
+            {
+                var data = info.MethodsData;
+                var dataLen = data.Count;
+                if (dataLen > 0)
+                {
+                    // gen data
+                    Dictionary<string, object[]> dt = new Dictionary<string, object[]>(dataLen);
+                    foreach (var mtd in data)
+                        dt.Add(mtd.Key, GetArguments(container, mtd.Value));
+
+                    info.MethodsInjector.Invoke(instance, dt);
+                }
+            }
+        }
+
+        private static ConstructorInfo GetCtor(Type type, out InjectionElement[] pars)
+        {
             ConstructorInfo ctor;
             var ctorsWithAttribute = type.GetConstructors().Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null).ToList();
             if (ctorsWithAttribute.Count > 1)
@@ -42,22 +120,11 @@ namespace Hypocrite.Container.Creators
                     throw new EntryPointNotFoundException($"Ctor of {type.GetDescription()} that could be used for creation could not be found");
             }
             pars = ctor.GetParameters().Select(x => InjectionElement.FromParameterInfo(x)).ToArray();
-            // caching
-            _cachedCtors.AddOrReplace(hash, Tuple.Create(ctor, pars));
             return ctor;
         }
 
-        private static readonly QuickQuickSet<InjectionElement[]> _cachedPropsAndFields = new QuickQuickSet<InjectionElement[]>();
-        internal static void GetPropsAndFields(Type type, int hash, out InjectionElement[] propsAndFields)
+        private static void GetPropsAndFields(Type type, out InjectionElement[] propsAndFields)
         {
-            // check for cache
-            var value = _cachedPropsAndFields.Get(hash);
-            if (value != null)
-            {
-                propsAndFields = value;
-                return;
-            }
-
             List<InjectionElement> elements = new List<InjectionElement>();
             // props shite
             var propertyInfos = type.GetTypeInfo().DeclaredProperties.Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null);
@@ -74,21 +141,10 @@ namespace Hypocrite.Container.Creators
                 elements.Add(InjectionElement.FromFieldInfo(fieldInfo));
             }
             propsAndFields = elements.ToArray();
-            // caching
-            _cachedPropsAndFields.AddOrReplace(hash, propsAndFields);
         }
 
-        private static readonly QuickQuickSet<Dictionary<string, InjectionElement[]>> _cachedMethods = new QuickQuickSet<Dictionary<string, InjectionElement[]>>();
-        internal static void GetMethods(Type type, int hash, out Dictionary<string, InjectionElement[]> methods)
+        private static void GetMethods(Type type, out Dictionary<string, InjectionElement[]> methods)
         {
-            // check for cache
-            var value = _cachedMethods.Get(hash);
-            if (value != null)
-            {
-                methods = value;
-                return;
-            }
-
             Dictionary<string, InjectionElement[]> elements = new Dictionary<string, InjectionElement[]>();
             var methodInfos = type.GetTypeInfo().DeclaredMethods.Where(x => x.GetCustomAttribute<InjectionAttribute>(true) != null);
             ParameterInfo[] methodPars;
@@ -107,12 +163,10 @@ namespace Hypocrite.Container.Creators
                 elements.Add(methodInfo.Name, injectionPars);
             }
             methods = elements;
-            // caching
-            _cachedMethods.AddOrReplace(hash, methods);
         }
         
         private static readonly object[] _constEmptyObjectArray = Array.Empty<object>();
-        internal static object[] GetArguments(ILightContainer container, InjectionElement[] pars)
+        private static object[] GetArguments(ILightContainer container, InjectionElement[] pars)
         {
             if (pars.Length == 0)
                 return _constEmptyObjectArray;

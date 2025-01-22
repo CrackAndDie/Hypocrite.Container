@@ -147,6 +147,7 @@ namespace Hypocrite.Container
             _workspace.Register(new ContainerRegistration()
             {
                 RegisteredType = fromT,
+                MappedToType = instance.GetType(),
                 Instance = instance,
                 RegistrationType = RegistrationType.Instance
             },
@@ -158,6 +159,7 @@ namespace Hypocrite.Container
             _workspace.Register(new ContainerRegistration()
             {
                 RegisteredType = typeof(TFrom),
+                MappedToType = instance.GetType(),
                 Instance = instance,
                 RegistrationType = RegistrationType.Instance
             },
@@ -169,6 +171,7 @@ namespace Hypocrite.Container
             _workspace.Register(new ContainerRegistration()
             {
                 RegisteredType = fromT,
+                MappedToType = instance.GetType(),
                 Instance = instance,
                 RegistrationType = RegistrationType.Instance
             },
@@ -180,6 +183,7 @@ namespace Hypocrite.Container
             _workspace.Register(new ContainerRegistration()
             {
                 RegisteredType = typeof(TFrom),
+                MappedToType = instance.GetType(),
                 Instance = instance,
                 RegistrationType = RegistrationType.Instance
             },

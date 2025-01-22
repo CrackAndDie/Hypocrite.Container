@@ -5,16 +5,13 @@ using Hypocrite.Container.Interfaces;
 using Hypocrite.Container.Registrations;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Reflection;
-using System.Xml.Linq;
-using static Hypocrite.Container.Creators.Creator;
 
 namespace Hypocrite.Container
 {
     internal class Workspace : IDisposable
     {
         private readonly ILightContainer _parent;
+        private readonly QuickSet<CreationInfo> _creationInfo = new QuickSet<CreationInfo>();
         private readonly QuickSet<ContainerRegistration> _registrations = new QuickSet<ContainerRegistration>();
 
         internal Workspace(ILightContainer parent)
@@ -47,46 +44,41 @@ namespace Hypocrite.Container
             // creating an instance and injecting everything
             if (registration.RegistrationType != RegistrationType.Factory)
             {
-                ConstructorInfo ctor = GetCtor(type, hashCode, out InjectionElement[] pars);
-                object[] args = GetArguments(_parent, pars);
-                registration.Instance = InstanceCreator.CreateWithParams(hashCode, ctor, args);
+                // getting info of the shite
+                var info = _creationInfo.Get(hashCode, name);
+                // check for existance
+                if (info == null)
+                {
+                    info = Creator.GetCreationInfo(registration.MappedToType, false);
+                    _creationInfo.AddOrReplace(hashCode, name, info);
+                }
+
+                // create an instance
+                registration.Instance = Creator.Create(info, _parent);
+
+                // inject the shite
+                Creator.Inject(registration.Instance, info, _parent);
             }
             else
+            {
+                // create the instance
                 registration.Instance = registration.Factory.Invoke(_parent, registration.RegisteredType, name);
 
-            // injecting
-            var result = registration.Instance;
-
-            // props/fields
-            {
-                GetPropsAndFields(type, hashCode, out InjectionElement[] propsAndFields);
-                if (propsAndFields.Length > 0)
+                // getting info of the shite
+                var info = _creationInfo.Get(hashCode, name);
+                // check for existance
+                if (info == null && registration.Instance != null)
                 {
-                    object[] args = GetArguments(_parent, propsAndFields);
-
-                    // gen data
-                    Dictionary<string, object> data = new Dictionary<string, object>(propsAndFields.Length);
-                    for (int i = 0; i < propsAndFields.Length; ++i)
-                        data.Add(propsAndFields[i].Name, args[i]);
-
-                    PropsAndFieldsInjector.Inject(type, hashCode, result, data);
+                    info = Creator.GetCreationInfo(registration.Instance.GetType(), true);
+                    _creationInfo.AddOrReplace(hashCode, name, info);
                 }
-            }
-            // nethods
-            {
-                GetMethods(type, hashCode, out Dictionary<string, InjectionElement[]> methods);
-                if (methods.Count > 0)
-                {
-                    // gen data
-                    Dictionary<string, object[]> data = new Dictionary<string, object[]>(methods.Count);
-                    foreach (var mtd in methods)
-                        data.Add(mtd.Key, GetArguments(_parent, mtd.Value));
 
-                    MethodsInjector.Inject(type, hashCode, result, data);
-                }
+                // inject the shite
+                Creator.Inject(registration.Instance, info, _parent);
             }
-            
+
             // reset cache if not instance
+            var result = registration.Instance;
             if (registration.RegistrationType != RegistrationType.Instance)
                 registration.Instance = null;
 
