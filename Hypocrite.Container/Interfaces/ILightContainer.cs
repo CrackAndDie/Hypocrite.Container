@@ -2,7 +2,7 @@
 
 namespace Hypocrite.Container.Interfaces
 {
-	public interface ILightContainer
+	public interface ILightContainer : IDisposable
 	{
         // Registrations
         void Register(Type fromT, Type toT);
@@ -36,5 +36,9 @@ namespace Hypocrite.Container.Interfaces
         bool IsRegistered<TFrom>();
         bool IsRegistered(Type type, string name);
         bool IsRegistered<TFrom>(string name);
+        Type GetRegistrationType(Type type);
+        Type GetRegistrationType<TFrom>();
+        Type GetRegistrationType(Type type, string name);
+        Type GetRegistrationType<TFrom>(string name);
     }
 }

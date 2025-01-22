@@ -12,7 +12,7 @@ using static Hypocrite.Container.Creators.Creator;
 
 namespace Hypocrite.Container
 {
-    internal class Workspace
+    internal class Workspace : IDisposable
     {
         private readonly ILightContainer _parent;
         private readonly QuickSet<ContainerRegistration> _registrations = new QuickSet<ContainerRegistration>();
@@ -97,6 +97,19 @@ namespace Hypocrite.Container
         {
             var entry = _registrations.Get(type.GetHashCode(), name);
             return entry != null;
+        }
+
+        internal Type GetRegistrationType(Type type, string name)
+        {
+            if (type == null)
+                return _registrations.Get(0, name)?.MappedToType;
+            else
+                return _registrations.Get(type.GetHashCode(), name)?.MappedToType;
+        }
+
+        public void Dispose()
+        {
+            _registrations.Clear();
         }
     }
 }

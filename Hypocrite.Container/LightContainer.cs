@@ -1,6 +1,7 @@
 ﻿using Hypocrite.Container.Interfaces;
 using Hypocrite.Container.Registrations;
 using System;
+using System.Xml.Linq;
 
 namespace Hypocrite.Container
 {
@@ -30,6 +31,26 @@ namespace Hypocrite.Container
         public bool IsRegistered<TFrom>(string name)
         {
             return _workspace.IsRegistered(typeof(TFrom), name);
+        }
+
+        public Type GetRegistrationType(Type type)
+        {
+            return _workspace.GetRegistrationType(type, string.Empty);
+        }
+
+        public Type GetRegistrationType<TFrom>()
+        {
+            return _workspace.GetRegistrationType(typeof(TFrom), string.Empty);
+        }
+
+        public Type GetRegistrationType(Type type, string name)
+        {
+            return _workspace.GetRegistrationType(type, name);
+        }
+
+        public Type GetRegistrationType<TFrom>(string name)
+        {
+            return _workspace.GetRegistrationType(typeof(TFrom), name);
         }
 
 
@@ -228,6 +249,11 @@ namespace Hypocrite.Container
         public T Resolve<T>(string name)
         {
             return (T)_workspace.Resolve(typeof(T), name);
+        }
+
+        public void Dispose()
+        {
+            _workspace.Dispose();
         }
     }
 }

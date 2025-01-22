@@ -32,13 +32,14 @@ namespace Hypocrite.Container.Common
 		{
 			var targetBucket = (hashCode & HashMask) % Buckets.Length;
 			bool notEmptyName = name.Length > 0;
+			bool notEmptyCode = hashCode != 0;
 
             var i = Buckets[targetBucket];
 			LightEntry<TValue> candidate;
             while (i >= 0)
 			{
                 candidate = Entries[i];
-				if (candidate.HashCode != hashCode || (notEmptyName && candidate.Name != name)) 
+				if ((notEmptyCode && candidate.HashCode != hashCode) || (notEmptyName && candidate.Name != name)) 
 				{
 					i = candidate.Next;
                     continue; 
@@ -86,6 +87,12 @@ namespace Hypocrite.Container.Common
 
 			return true;
 		}
+
+        public void Clear()
+        {
+            Buckets = null;
+            Entries = null;
+        }
         #endregion
 
         #region Implementation
@@ -153,13 +160,14 @@ namespace Hypocrite.Container.Common
         public TValue Get(int hashCode)
         {
             var targetBucket = (hashCode & HashMask) % Buckets.Length;
+            bool notEmptyCode = hashCode != 0;
 
             var i = Buckets[targetBucket];
             LightLightEntry<TValue> candidate;
             while (i >= 0)
             {
                 candidate = Entries[i];
-                if (candidate.HashCode != hashCode)
+                if ((notEmptyCode && candidate.HashCode != hashCode))
                 {
                     i = candidate.Next;
                     continue;
@@ -205,6 +213,12 @@ namespace Hypocrite.Container.Common
             Buckets[targetBucket] = Count++;
 
             return true;
+        }
+
+        public void Clear()
+        {
+            Buckets = null;
+            Entries = null;
         }
         #endregion
 
