@@ -12,7 +12,7 @@
 		<PackageDescription>A lightweight container with adapter for Prism</PackageDescription>
 		<Copyright>Copyright ©  2025</Copyright>
 		<PackageTags>Prism Container Injection DI Ioc</PackageTags>
-		<PackageVersion>1.2.0</PackageVersion>
+		<PackageVersion>1.2.1</PackageVersion>
 		<PackageProjectUrl>https://github.com/CrackAndDie/Hypocrite.Container</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/CrackAndDie/Hypocrite.Container</RepositoryUrl>
 		<PackageIconUrl>https://raw.githubusercontent.com/CADindustries/container/main/logos/package-custom.png</PackageIconUrl>
