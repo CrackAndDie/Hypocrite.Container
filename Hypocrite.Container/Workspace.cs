@@ -5,6 +5,7 @@ using Hypocrite.Container.Interfaces;
 using Hypocrite.Container.Registrations;
 using System;
 using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Hypocrite.Container
 {
@@ -29,8 +30,37 @@ namespace Hypocrite.Container
             int hashCode = type.GetHashCode();
             var registration = _registrations.Get(hashCode, name);
             if (registration == null)
-                throw new KeyNotFoundException($"Registration for type {type.GetDescription()} with name {name} could not be found");
+                OneMoreChance(hashCode, type, name);
 
+            return HandleRegistration(registration, hashCode, name);
+        }
+
+        private object OneMoreChance(int hashCode, Type type, string name)
+        {
+            // try to resolve with an empty name
+            var registration = _registrations.Get(hashCode, string.Empty);
+            if (registration != null)
+                return HandleRegistration(registration, hashCode, name);
+
+            // check for primitives
+            if (type.IsPrimitive)
+                return type.GetDefaultValue();
+            else if (type == typeof(string))
+                return string.Empty;
+
+            // try to create it by my own
+            if (type.IsClass)
+            {
+                _parent.Register(type, type, name);
+                return _parent.Resolve(type, name);
+            }
+
+            // error if there is no other ways to do it :(
+            throw new KeyNotFoundException($"Registration for type {type.GetDescription()} with name {name} could not be found");
+        }
+
+        private object HandleRegistration(ContainerRegistration registration, int hashCode, string name)
+        {
             // this is a cache for recursive resolve
             if (registration.RegistrationType == RegistrationType.Type && registration.Instance != null)
                 return registration.Instance;
