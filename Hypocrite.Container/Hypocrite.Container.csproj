@@ -13,7 +13,7 @@
 		<PackageDescription>A lightweight DI container</PackageDescription>
 		<Copyright>Copyright ©  2025</Copyright>
 		<PackageTags>Container Injection DI Ioc</PackageTags>
-		<PackageVersion>1.2.2</PackageVersion>
+		<PackageVersion>1.2.3</PackageVersion>
 		<PackageProjectUrl>https://github.com/CrackAndDie/Hypocrite.Container</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/CrackAndDie/Hypocrite.Container</RepositoryUrl>
 		<PackageIconUrl>https://raw.githubusercontent.com/CADindustries/container/main/logos/package-custom.png</PackageIconUrl>

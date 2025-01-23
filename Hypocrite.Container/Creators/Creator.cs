@@ -116,6 +116,10 @@ namespace Hypocrite.Container.Creators
                     .Where(c => c.GetParameters().Length == 0)
                     .FirstOrDefault();
 
+                // just any ctor pls
+                if (ctor == null)
+                    ctor = type.GetConstructors().FirstOrDefault();
+
                 if (ctor == null)
                     throw new EntryPointNotFoundException($"Ctor of {type.GetDescription()} that could be used for creation could not be found");
             }
