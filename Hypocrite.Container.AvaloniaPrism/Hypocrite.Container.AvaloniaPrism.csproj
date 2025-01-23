@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
+		<RootNamespace>Hypocrite.Container.AvaloniaPrism</RootNamespace>
+		<AssemblyName>Hypocrite.Container.AvaloniaPrism</AssemblyName>
+
+		<PackageId>Hypocrite.Container.AvaloniaPrism</PackageId>
+		<Authors>crackanddie</Authors>
+		<Product>Hypocrite.Container.AvaloniaPrism</Product>
+		<PackageDescription>A lightweight container with adapter for Prism.Avalonia</PackageDescription>
+		<Copyright>Copyright ©  2025</Copyright>
+		<PackageTags>Prism Container Injection DI Ioc</PackageTags>
+		<PackageVersion>1.2.0</PackageVersion>
+		<PackageProjectUrl>https://github.com/CrackAndDie/Hypocrite.Container</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/CrackAndDie/Hypocrite.Container</RepositoryUrl>
+		<PackageIconUrl>https://raw.githubusercontent.com/CADindustries/container/main/logos/package-custom.png</PackageIconUrl>
+		<PackageReadmeFile>NUGET_README.md</PackageReadmeFile>
+		<PackageLicenseFile>NUGET_LICENSE.txt</PackageLicenseFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Hypocrite.Container\Hypocrite.Container.csproj" />
+	</ItemGroup>
+
+	<PropertyGroup>
+		<TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+	</PropertyGroup>
+	<Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
+		<ItemGroup>
+			<BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />
+		</ItemGroup>
+	</Target>
+	<ItemGroup>
+		<PackageReference Include="Prism.Avalonia" Version="8.1.97.11000" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="NUGET_README.md" Pack="true" PackagePath="\" />
+		<None Include="NUGET_LICENSE.txt" Pack="true" PackagePath="\"/>
+	</ItemGroup>
+</Project>

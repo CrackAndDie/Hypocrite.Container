@@ -3,7 +3,7 @@ using Prism.Ioc;
 using Prism.Ioc.Internals;
 using System;
 
-namespace Hypocrite.Container.Prism
+namespace Hypocrite.Container.PrismAvalonia
 {
     public class HypocriteContainerExtension : IContainerExtension<ILightContainer>, IContainerInfo
     {
