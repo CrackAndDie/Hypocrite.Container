@@ -30,7 +30,7 @@ namespace Hypocrite.Container
             int hashCode = type.GetHashCode();
             var registration = _registrations.Get(hashCode, name);
             if (registration == null)
-                OneMoreChance(hashCode, type, name);
+                return OneMoreChance(hashCode, type, name);
 
             return HandleRegistration(registration, hashCode, name);
         }
