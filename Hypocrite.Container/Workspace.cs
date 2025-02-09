@@ -67,7 +67,25 @@ namespace Hypocrite.Container
 
             // this is a singleton/instance
             if (registration.RegistrationType == RegistrationType.Instance && registration.Instance != null)
+            {
+                // check if all shite is injected
+                if (!registration.InstanceInjectionsResolved)
+                {
+                    // getting info of the shite
+                    var info = _creationInfo.Get(hashCode, name);
+                    // check for existance
+                    if (info == null)
+                    {
+                        info = Creator.GetCreationInfo(registration.Instance.GetType(), true);
+                        _creationInfo.AddOrReplace(hashCode, name, info);
+                    }
+                    // inject the shite
+                    Creator.Inject(registration.Instance, info, _parent);
+
+                    registration.InstanceInjectionsResolved = true;
+                }
                 return registration.Instance;
+            }
 
             // upper checks could be collaps but don't do this because of readability
 
@@ -111,6 +129,8 @@ namespace Hypocrite.Container
             var result = registration.Instance;
             if (registration.RegistrationType != RegistrationType.Instance)
                 registration.Instance = null;
+            else
+                registration.InstanceInjectionsResolved = true; // it is a singleton - set it to true to skip double injection
 
             return result;
         }
