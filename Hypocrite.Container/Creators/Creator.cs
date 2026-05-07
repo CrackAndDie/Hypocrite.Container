@@ -66,6 +66,10 @@ namespace Hypocrite.Container.Creators
 
         internal static void Inject(object instance, CreationInfo info, ILightContainer container)
         {
+            // no need to inject anything when the instance is null
+            if (instance == null)
+                return;
+
             // props/fields
             {
                 var data = info.PropsAndFieldsData;
