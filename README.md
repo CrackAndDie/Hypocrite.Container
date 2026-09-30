@@ -58,8 +58,12 @@ lightContainer.Register<TestClass, TestClass>();
 var classInstance = lightContainer.Resolve<TestClass>();
 ```
 
-<img width="797" height="302" alt="image" src="https://github.com/user-attachments/assets/9c7a34ec-33d6-4a6b-b898-401a2c6b7d39" />
-
+<p align="center">
+  <a>
+    <img width="797" height="302" alt="image" src="https://github.com/user-attachments/assets/9c7a34ec-33d6-4a6b-b898-401a2c6b7d39" />
+  </a>
+</p>
+<h5 align="center">(Benchmark name "PureResolveType")</h5>  
 
 <h4>Attribute injections:</h4>  
 
@@ -73,6 +77,12 @@ private class NormalClass
     AnotherInjectedClass _anotherTestClass;
 }
 ```
+<p align="center">
+  <a>
+    <img width="791" height="299" alt="image" src="https://github.com/user-attachments/assets/107a3f68-63c4-48c9-8942-1a9dbdcbfd1d" />
+  </a>
+</p>
+<h5 align="center">(Benchmark name "ResolveTypeWithParamsInj")</h5>  
 
 <h4>Constructor injections:</h4>  
 
@@ -84,6 +94,7 @@ private class NormalClass
     private int _a;
     private string _b;
 
+    [Injection]
     public NormalClass(InjectedClass testClass, int a, string b = "awd")
     {
         _testClass = testClass;
@@ -92,7 +103,15 @@ private class NormalClass
     }
 }
 ```
-the *testClass* parameter would be resolved as usual (if it is not registered in the container then an instance of it would be created); the *a* parameter would have **default type** value (for Int32 is 0); the *b* parameter would have its **default parameter** value (in this case is "awd").  
+the *testClass* parameter would be resolved as usual (if it is not registered in the container then an instance of it would be created); the *a* parameter would have **default type** value (for Int32 is 0); the *b* parameter would have its **default parameter** value (in this case is "awd").   
+
+<p align="center">
+  <a>
+    <img width="786" height="305" alt="image" src="https://github.com/user-attachments/assets/5ca3334c-3f13-4289-b60e-ee95ccb0eb65" />
+  </a>
+</p>
+<h5 align="center">(Benchmark name "ResolveTypeWithCtorInj")</h5>  
+
 
 <h4>Inheritance injections:</h4>  
 
