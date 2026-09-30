@@ -17,7 +17,7 @@
 
 <h2>About:</h2>  
 
-A package that provides registrations and resolves of services and other shite in the fast and lightweight container.
+Lightning fast realtime DI/IOC container. It is slower than compile time containers but more flexible. 
 
 ## Download for WPF with [Prism](https://github.com/PrismLibrary/Prism):  
 
