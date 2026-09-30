@@ -41,10 +41,30 @@ A package that provides registrations and resolves of services and other shite i
 
 <h2>Features:</h2>  
 
+<h4>Default usage:</h4>  
+
+You can manually use container to register and resolve types when needed:  
+```csharp
+public class TestClass
+{
+    public int A { get; set; }
+    public string B { get; set; }
+}
+
+// somewhere
+ILightContainer lightContainer = new LightContainer();
+lightContainer.Register<TestClass, TestClass>();
+
+var classInstance = lightContainer.Resolve<TestClass>();
+```
+
+<img width="797" height="302" alt="image" src="https://github.com/user-attachments/assets/9c7a34ec-33d6-4a6b-b898-401a2c6b7d39" />
+
+
 <h4>Attribute injections:</h4>  
 
 All the registered shite could be resolved via *Injection* attribute (use the attribute only for properties and fields) like this:
-```c#
+```csharp
 private class NormalClass
 {
     [Injection]
@@ -57,7 +77,7 @@ private class NormalClass
 <h4>Constructor injections:</h4>  
 
 Parametrised constructors could be used with *Hypocrite.Container*. For example after registering and resolving the class  
-```c#
+```csharp
 private class NormalClass
 {
     private InjectedClass _testClass;
@@ -77,7 +97,7 @@ the *testClass* parameter would be resolved as usual (if it is not registered in
 <h4>Inheritance injections:</h4>  
 
 The classed from which Your class is inherited would also be prepared for injections:  
-```c#
+```csharp
 private class InjectedClass
 {
     internal int A { get; set; }
@@ -98,7 +118,7 @@ So in this case after *NormalClass* registration and resolve, the *TestClass* pr
 <h4>Recursive injections:</h4>  
 
 There could be two classes that require injection of each other:
-```c#
+```csharp
 private class FirstClass
 {
     [Injection]
