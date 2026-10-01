@@ -24,12 +24,6 @@ namespace Hypocrite.Benchmarks
             var benchmarkSwitcher = new BenchmarkSwitcher(benchmarks);
             benchmarkSwitcher.Run(args);
 
-            //var _lightContainer = new LightContainer();
-            //_lightContainer.Register<Test_PureResolveType, Test_PureResolveType>();
-
-            //_lightContainer.Resolve<Test_PureResolveType>();
-            //_lightContainer.Resolve<Test_PureResolveType>();
-
             Console.ReadKey();
         }
     }
